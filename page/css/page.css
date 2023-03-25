@@ -1,8 +1,16 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #e4d9d9;
+	background-color: #e4d9d9;
 }
 
 .container {
   margin-top: 1rem!important;
+}
+
+pre {
+	font-size: 18;
+}
+
+textarea.form-control {
+	height:  400px;
 }

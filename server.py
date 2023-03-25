@@ -3,6 +3,7 @@ import tornado
 
 import logging
 import time
+import aiofiles
 
 from tornado.websocket import WebSocketHandler
 from tornado.web import RequestHandler
@@ -25,6 +26,7 @@ class MainHandler(RequestHandler):
         self.set_header("Access-Control-Allow-Headers", "x-requested-with")
         self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
         self.render('page/index.html')
+
 class aboutHandler(RequestHandler):
     def get(self):
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -37,6 +39,11 @@ class jobsHandler(RequestHandler):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Headers", "x-requested-with")
         self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+
+        token = self.get_argument('token', None, True)
+        if token != open("token", "r").read()[:-1]:
+            self.write("<p>Unauthorized Access</p>")
+            return 
 
         running_jobs, pending_jobs, finished_jobs, old_jobids = jm.list_jobs()
         
@@ -327,24 +334,48 @@ class OldSubmitHandler(RequestHandler):
                     # data.append([each,4,""])
         # self.write({'data':data})
 
-# class DownloadHandler(RequestHandler):
+class DownloadHandler(RequestHandler):
+    async def get(self, id):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+        bitfile = "./jobs/%s/top.bit" % id
+        file_exist = os.path.exists(bitfile)
+        if not file_exist:
+            self.write("<p>Bitstream file not found for id %s!</p>" % str(id))
+            return
+        self.set_header('Content-Type', 'application/octet-stream')
+        self.set_header('Content-Disposition', 'attachment; filename=top-%s.bit' % id)
+        # the aiofiles use thread pool,not real asynchronous
+        async with aiofiles.open(bitfile, 'rb') as f:
+            while True:
+                data = await f.read(1024)
+                if not data:
+                    break
+                self.write(data)
+                # flush method call is import,it makes low memory occupy,beacuse it send it out timely
+                self.flush()
+
     # def get(self,id):
         # self.set_header("Access-Control-Allow-Origin", "*")
         # self.set_header("Access-Control-Allow-Headers", "x-requested-with")
         # self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-        # code = 1
-        # msg = "下载成功"
-        # path = "./jobs/%s/results/top.bit"%id
-        # file_exist = os.path.exists(path)
-        # File_list = FilesEx(id)
+        # self.set_header('Content-Type', 'application/octet-stream')
+        # self.set_header('Content-Disposition', 'attachment; filename=top.bit')
+        # # code = 1
+        # # msg = "下载成功"
+        # bitfile = "./jobs/%s/top.bit" % id
+        # file_exist = os.path.exists(bitfile)
+        # # File_list = FilesEx(id)
         # if file_exist:
-            # data = {"code": code,"msg": msg,"data":File_list}
-            # self.write(data)
-        # else:
-            # code = 0
-            # msg = "下载失败，没有相应比特流文件"
-            # data = {"code": code,"msg": msg,"data":File_list}
-            # self.write(data)
+            # self.write(open(bitfile, 'rb').read())
+            # # data = {"code": code,"msg": msg,"data":File_list}
+            # # self.write(data)
+        # # else:
+            # # code = 0
+            # # msg = "下载失败，没有相应比特流文件"
+            # # data = {"code": code,"msg": msg,"data":File_list}
+            # # self.write(data)
 
 application = tornado.web.Application([
     (r'/submit', InteractiveSubmitHandler),
@@ -352,7 +383,7 @@ application = tornado.web.Application([
     (r'/about', aboutHandler),
     (r'/status/(\w+)',StatusHandler),
     # (r'/query/(\w+)',QueryHandler),
-    # (r'/download/(\w+)',DownloadHandler),
+    (r'/download/(\w+)',DownloadHandler),
     # (r'/api_joblist', JobListHandler),
     (r"/", MainHandler),
     (r'/(.*)', StaticFileHandler, {'path': './page/'}),
