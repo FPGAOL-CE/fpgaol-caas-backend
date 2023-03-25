@@ -7,7 +7,7 @@ import shutil
 import time
 import base64
 
-from compile import compile
+from compile import compile_new
 from LogExtract import LogEx
 
 JOBS_DIR = 'jobs'
@@ -16,47 +16,50 @@ logging.basicConfig(
     format='%(asctime)s line:%(lineno)s,  %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def try_compile(jobdir, id, filenames, device, callback):
+def try_compile(job, callback):
     try:
-        compile(jobdir, id, filenames, device)
+        compile_new(job)
     except Exception as e:
-        logger.warning('compile got exception %s'%(str(e)))
-    callback(id)
+        logger.warning('try_compile: job %s got exception %s!' % (str(job.id), str(e)))
+    callback(job.id)
 
 
 class job:
-    def _create(self, id, sourcecode):
-        try:
-            if os.path.exists(os.path.join(JOBS_DIR, id)):
-                shutil.rmtree(os.path.join(JOBS_DIR, id))
-            os.mkdir(os.path.join(JOBS_DIR, id))
-        except FileExistsError:
-            logger.warning('dir (%s) exists' % id)
-
-        self.filenames = []
-
-        for filename, code in sourcecode:
-            try:
-                f = open(os.path.join(JOBS_DIR, id, filename), 'wb')
-                ZipFileName = 'UserZip.zip'
-                if filename == ZipFileName:
-                    #b64_content = base64.urlsafe_b64decode(code)
-                    f.write(code)
-                else:
-                    f.write(code)
-                f.close()
-                self.filenames.append(filename)
-            except Exception as e:
-                logger.warning(
-                    'writing sourcecode file (%s) error, value:' % filename, e)
-
-    def __init__(self, id, sourcecode, device):
+    def __init__(self, id, sourcecode, device, jobs_dir = JOBS_DIR, simple=0):
         self.id = id
         self.submit_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         self.start_time = '-'
         self.finish_time = '-'
         self.device = device
-        self._create(id, sourcecode)
+        self.simple = simple
+        self.jobs_dir = jobs_dir
+        # self._create(id, sourcecode)
+
+        try:
+            if os.path.exists(os.path.join(self.jobs_dir, id)):
+                shutil.rmtree(os.path.join(self.jobs_dir, id))
+            os.mkdir(os.path.join(self.jobs_dir, id))
+        except FileExistsError:
+            logger.warning('job _create: dir (%s) exists, not a big deal. ' % id)
+
+        self.filenames = []
+
+        for filename, code in sourcecode:
+            try:
+                f = open(os.path.join(self.jobs_dir, id, filename), 'w')
+                # ZIP file remains as is, and then unzipped by compiling functions
+                # ZipFileName = 'UserZip.zip'
+                # if filename == ZipFileName:
+                    # #b64_content = base64.urlsafe_b64decode(code)
+                    # f.write(code)
+                # else:
+                f.write(code)
+                f.close()
+                self.filenames.append(filename)
+            except Exception as e:
+                logger.warning(
+                    'writing sourcecode file (%s) error, value:' % filename, e)
+    # def _create(self, id, sourcecode):
 
 
 class jobManager:
@@ -72,12 +75,14 @@ class jobManager:
 
         self.lock = threading.Lock()
 
-    def add_a_job(self, id, sourcecode, device):
+    # simple=1: bare single text file and xdc file
+    # simple=0: zip file for direct compilation
+    def add_a_job(self, id, sourcecode, device, simple=0):
         if id in self.using_job_id:
-            logger.warning('id(%s) in using' % id)
+            logger.warning('add_a_job: id %s in use!' % id)
             return
         self.using_job_id.add(id)
-        a_new_job = job(id, sourcecode, device)
+        a_new_job = job(id, sourcecode, device, simple=simple)
         self.lock.acquire()
         if len(self.running_jobs) < self.running_job_max:
             self.run_a_job(id, a_new_job)
@@ -86,9 +91,8 @@ class jobManager:
         self.lock.release()
 
     def job_finish(self, id):
-        logger.info('job finished %s' % id)
-        logger.info("\nCompilingPrjid%sFinish"%id)
-        LogEx(id)
+        logger.info('\njob_finish: %s finished. ' % id)
+        # LogEx(id)
         self.lock.acquire()
         self.running_jobs[id].finish_time = time.strftime(
             "%Y-%m-%d %H:%M:%S", time.localtime())
@@ -106,8 +110,7 @@ class jobManager:
     def run_a_job(self, id, job):
         self.running_jobs[id] = job
         job.start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        threading.Thread(target=try_compile, args=(
-            JOBS_DIR, id, job.filenames, job.device, self.job_finish)).start()
+        threading.Thread(target=try_compile, args=(job, self.job_finish)).start()
 
     def list_jobs(self):
         ret1 = []

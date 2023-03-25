@@ -2,16 +2,17 @@ import os
 import tornado
 
 import logging
+import time
 
 from tornado.websocket import WebSocketHandler
 from tornado.web import RequestHandler
 from tornado.web import StaticFileHandler
 
 from jobmanager import jobManager
-from FileExist import FilesEx
+# from FileExist import FilesEx
 import json
 
-jm = jobManager(4, 16)
+jm = jobManager(8, 64)
 
 logging.basicConfig(
     format='%(asctime)s line:%(lineno)s,  %(message)s', level=logging.INFO)
@@ -50,6 +51,7 @@ class StatusHandler(RequestHandler):
         self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
         running_jobs_temp, pending_jobs_temp, finished_jobs_temp, old_jobids = jm.list_jobs()
         
+        # feels inefficient...
         running_jobs = []
         pending_jobs = []
         finished_jobs = []
@@ -71,8 +73,107 @@ class StatusHandler(RequestHandler):
         else:
             self.write('error')
 
+class InteractiveSubmitHandler(RequestHandler):
+    def post(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
 
-class SubmitHandler(RequestHandler):
+        body_arguments = self.request.body_arguments
+        # print(body_arguments.keys())
+
+        try:
+            id = bytes.decode(body_arguments['inputJobId'][0], encoding='utf-8')
+            logger.info("\nNew submit: id %s" % id)
+        except KeyError:
+            id = 0
+
+        try:
+            inputFpgaPart = bytes.decode(
+                body_arguments['inputFpgaPart'][0], encoding='utf-8')
+        except KeyError:
+            inputFpgaPart = 0
+
+        XdcFileName = 'top.xdc'
+        SrcFileName1 = 'top.v'
+
+        #XdcFileName = bytes.decode(
+            #body_arguments['XdcFileName'][0], encoding='utf-8')
+        try:
+            inputXdcFile = bytes.decode(
+                body_arguments['inputXdcFile'][0], encoding='utf-8')
+        except KeyError:
+            inputXdcFile = 0
+
+        # SrcFileName1 = bytes.decode(
+            # body_arguments['SrcFileName1'][0], encoding='utf-8')
+        try:
+            inputSrcFile1 = bytes.decode(
+                body_arguments['inputSrcFile1'][0], encoding='utf-8')
+        except KeyError:
+            inputSrcFile1 = 0
+
+  #      SrcFileName2 = bytes.decode(
+  #          body_arguments['SrcFileName2'][0], encoding='utf-8')
+  #      inputFile2 = bytes.decode(
+  #          body_arguments['inputFile2'][0], encoding='utf-8')
+
+        #inputFiles = body_arguments['inputFile1']
+        # SrcFileName = body_arguments['SrcFilname']
+        #print(id, XdcFileName, SrcFileName1, SrcFileName2, inputFPGA)
+        sourcecode = [[XdcFileName, inputXdcFile], [SrcFileName1, inputSrcFile1]]
+
+        # sourcecode = [[inputXdcFile, inputSrcFile1]]
+
+        # if SrcFileName2:
+            # sourcecode.append([SrcFileName2, inputFile2])
+
+        # for i,inputFile in enumerate(inputFiles):
+            # sourcecode.append([str(i)+'.v',bytes.decode(inputFile,encoding='utf-8')])
+
+  #      print(sourcecode)
+        # if  id and inputFPGA and XdcFileName and inputXdcFile and inputFiles:
+
+        returncode = 0
+        msg = "Unable to submit"
+
+        if id and inputFpgaPart and inputXdcFile and inputSrcFile1:
+            returncode = 1 
+            msg = "Compilation submitted... "
+        else:
+            if not id:
+                msg += ", id invalid"
+            if not inputFpgaPart:
+                msg += ", input FPGA Part invalid"
+            if not inputXdcFile:
+                msg += ", input constraints(XDC) invalid"
+            if not inputSrcFile1:
+                msg += ", input Verilog source code invalid"
+            logger.info("\nJob id %s failed to submit!" % id)
+
+        if (returncode == 1):
+            jm.add_a_job(id, sourcecode, inputFpgaPart, simple=1)
+
+        data = {"code": returncode,"msg": msg}
+        self.write(data)
+        return
+        # self.write(data)
+        # self.write("<h1>Results</h1>")
+        # time.sleep(1)
+        # self.write("<p>11111</p>")
+        # await tornado.ioloop.IOLoop.current().run_in_executor(None, self.do_compiling, (id, sourcecode, inputFpgaPart))
+
+        # self.redirect('/jobs')
+
+    # # at this stage, we have all required files and params
+    # def do_compiling(self, id, sourcecode, devicepart):
+        # time.sleep(10)
+        # pass
+
+    # def on_connection_close(self):
+        # pass
+
+class OldSubmitHandler(RequestHandler):
     def post(self):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Headers", "x-requested-with")
@@ -90,6 +191,8 @@ class SubmitHandler(RequestHandler):
         #inputXdcFile = bytes.decode(
             #body_arguments['inputXdcFile'][0], encoding='utf-8')
         ZipFileName = 'UserZip.zip'
+        XdcFileName = 'top.xdc'
+        SrcFileName1 = 'top.v'
         
         inputZipFile = self.request.files['inputZipFile'][0].get('body')
   #      SrcFileName1 = bytes.decode(
@@ -104,9 +207,11 @@ class SubmitHandler(RequestHandler):
         #inputFiles = body_arguments['inputFile1']
         # SrcFileName = body_arguments['SrcFilname']
         #print(id, XdcFileName, SrcFileName1, SrcFileName2, inputFPGA)
-        # sourcecode = [[XdcFileName, inputXdcFile], [SrcFileName1, inputFile1]]
 
-        sourcecode = [[ZipFileName, inputZipFile]]
+        # Our convention now: XDC file MUST be the first
+        sourcecode = [[XdcFileName, inputXdcFile], [SrcFileName1, inputSrcFile1]]
+
+        # sourcecode = [[ZipFileName, inputZipFile]]
 
         # for i,inputFile in enumerate(inputFiles):
             # sourcecode.append([str(i)+'.v',bytes.decode(inputFile,encoding='utf-8')])
@@ -137,118 +242,118 @@ class SubmitHandler(RequestHandler):
         # self.redirect('/jobs')
 
 
-class QueryHandler(RequestHandler):
-    def get(self,id):
-        self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
-        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-        status = 0
-        code = 1
-        msg = ''
-        #output = dict()
-        running_jobs_temp, pending_jobs_temp, finished_jobs_temp, old_jobids = jm.list_jobs()
+# class QueryHandler(RequestHandler):
+    # def get(self,id):
+        # self.set_header("Access-Control-Allow-Origin", "*")
+        # self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        # self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+        # status = 0
+        # code = 1
+        # msg = ''
+        # #output = dict()
+        # running_jobs_temp, pending_jobs_temp, finished_jobs_temp, old_jobids = jm.list_jobs()
 
-        running_jobs = []
-        pending_jobs = []
-        finished_jobs = []
-        for each in running_jobs_temp:
-            running_jobs.append(each[0])
+        # running_jobs = []
+        # pending_jobs = []
+        # finished_jobs = []
+        # for each in running_jobs_temp:
+            # running_jobs.append(each[0])
 
-        for each in pending_jobs_temp:
-            pending_jobs.append(each[0])
+        # for each in pending_jobs_temp:
+            # pending_jobs.append(each[0])
 
-        for each in finished_jobs_temp:
-            finished_jobs.append(each[0])
-        path = "./jobs/%s/results/top.bit"%id
-        file_exist = os.path.exists(path)
-        #print(jm.list_jobs())
-        if id in running_jobs:
-            status = 1
-            msg = 'running'
-        elif id in pending_jobs:
-            status = 2
-            msg = 'pending'
-        elif (id in finished_jobs or id in old_jobids) and file_exist:
-            status = 3
-            msg = 'successful'
-        elif (id in finished_jobs or id in old_jobids) and ~file_exist:
-            status = 4
-            with open("./jobs/%s/error.log"%id,'r') as f:
-                error = f.read()
-            msg = 'compiling failed, the error message is as follows:\n'+error
-        else:
-            msg = 'error'
-            status = 0
+        # for each in finished_jobs_temp:
+            # finished_jobs.append(each[0])
+        # path = "./jobs/%s/results/top.bit"%id
+        # file_exist = os.path.exists(path)
+        # #print(jm.list_jobs())
+        # if id in running_jobs:
+            # status = 1
+            # msg = 'running'
+        # elif id in pending_jobs:
+            # status = 2
+            # msg = 'pending'
+        # elif (id in finished_jobs or id in old_jobids) and file_exist:
+            # status = 3
+            # msg = 'successful'
+        # elif (id in finished_jobs or id in old_jobids) and ~file_exist:
+            # status = 4
+            # with open("./jobs/%s/error.log"%id,'r') as f:
+                # error = f.read()
+            # msg = 'compiling failed, the error message is as follows:\n'+error
+        # else:
+            # msg = 'error'
+            # status = 0
 
-        #output["msg"] = msg
-        #output["status"] = status
-        data = {"code": code,"msg": msg,"data":{"status": status}}
-        self.write(data)
+        # #output["msg"] = msg
+        # #output["status"] = status
+        # data = {"code": code,"msg": msg,"data":{"status": status}}
+        # self.write(data)
 
-class JobListHandler(RequestHandler):
-    def get(self):
-        self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
-        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-        #output = dict()
-        running_jobs_temp, pending_jobs_temp, finished_jobs_temp, old_jobids = jm.list_jobs()
+# class JobListHandler(RequestHandler):
+    # def get(self):
+        # self.set_header("Access-Control-Allow-Origin", "*")
+        # self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        # self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+        # #output = dict()
+        # running_jobs_temp, pending_jobs_temp, finished_jobs_temp, old_jobids = jm.list_jobs()
 
-        new_jobs = []
-        data = []
-        for each in running_jobs_temp:
-            data.append([each[0],1,each[1]])
-            new_jobs.append(each[0])
+        # new_jobs = []
+        # data = []
+        # for each in running_jobs_temp:
+            # data.append([each[0],1,each[1]])
+            # new_jobs.append(each[0])
 
-        for each in pending_jobs_temp:
-            data.append([each[0],2,each[1]])
-            new_jobs.append(each[0])
+        # for each in pending_jobs_temp:
+            # data.append([each[0],2,each[1]])
+            # new_jobs.append(each[0])
 
-        for each in finished_jobs_temp:
-            path = "./jobs/%s/results/top.bit"%each[0]
-            file_exist = os.path.exists(path)
-            new_jobs.append(each[0])
-            if file_exist:
-                data.append([each[0],3,each[1]])
-            else:
-                data.append([each[0],4,each[1]])
+        # for each in finished_jobs_temp:
+            # path = "./jobs/%s/results/top.bit"%each[0]
+            # file_exist = os.path.exists(path)
+            # new_jobs.append(each[0])
+            # if file_exist:
+                # data.append([each[0],3,each[1]])
+            # else:
+                # data.append([each[0],4,each[1]])
             
-        for each in old_jobids:
-            if each not in new_jobs:
-                path = "./jobs/%s/results/top.bit"%each
-                file_exist = os.path.exists(path)
-                if file_exist:
-                    data.append([each,3,""])
-                else:
-                    data.append([each,4,""])
-        self.write({'data':data})
+        # for each in old_jobids:
+            # if each not in new_jobs:
+                # path = "./jobs/%s/results/top.bit"%each
+                # file_exist = os.path.exists(path)
+                # if file_exist:
+                    # data.append([each,3,""])
+                # else:
+                    # data.append([each,4,""])
+        # self.write({'data':data})
 
-class DownloadHandler(RequestHandler):
-    def get(self,id):
-        self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
-        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-        code = 1
-        msg = "下载成功"
-        path = "./jobs/%s/results/top.bit"%id
-        file_exist = os.path.exists(path)
-        File_list = FilesEx(id)
-        if file_exist:
-            data = {"code": code,"msg": msg,"data":File_list}
-            self.write(data)
-        else:
-            code = 0
-            msg = "下载失败，没有相应比特流文件"
-            data = {"code": code,"msg": msg,"data":File_list}
-            self.write(data)
+# class DownloadHandler(RequestHandler):
+    # def get(self,id):
+        # self.set_header("Access-Control-Allow-Origin", "*")
+        # self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        # self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+        # code = 1
+        # msg = "下载成功"
+        # path = "./jobs/%s/results/top.bit"%id
+        # file_exist = os.path.exists(path)
+        # File_list = FilesEx(id)
+        # if file_exist:
+            # data = {"code": code,"msg": msg,"data":File_list}
+            # self.write(data)
+        # else:
+            # code = 0
+            # msg = "下载失败，没有相应比特流文件"
+            # data = {"code": code,"msg": msg,"data":File_list}
+            # self.write(data)
 
 application = tornado.web.Application([
-    (r'/submit', SubmitHandler),
+    (r'/submit', InteractiveSubmitHandler),
     (r'/jobs', jobsHandler),
     (r'/about', aboutHandler),
     (r'/status/(\w+)',StatusHandler),
-    (r'/query/(\w+)',QueryHandler),
-    (r'/download/(\w+)',DownloadHandler),
-    (r'/api_joblist', JobListHandler),
+    # (r'/query/(\w+)',QueryHandler),
+    # (r'/download/(\w+)',DownloadHandler),
+    # (r'/api_joblist', JobListHandler),
     (r"/", MainHandler),
     (r'/(.*)', StaticFileHandler, {'path': './page/'}),
     

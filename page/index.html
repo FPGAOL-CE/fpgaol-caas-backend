@@ -13,7 +13,7 @@
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">FPGAOL Compiling Server</a>
+		<a class="navbar-brand" href="#"><b>FPGAOL-CE</b> <i style="color:gray">Compiling as a Service</i></a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -27,9 +27,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="jobs">JOBS</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">SYSTEM</a>
-                </li>
+                <!--<li class="nav-item">-->
+                    <!--<a class="nav-link" href="#">SYSTEM</a>-->
+                <!--</li>-->
                 <li class="nav-item">
                     <a class="nav-link" href="about">ABOUT</a>
                 </li>
@@ -45,8 +45,8 @@
                         <input type="text" class="form-control" id="inputJobId" name="inputJobId">
                     </div>
                     <div class="form-group col-md-4">
-                        <label for="inputFPGA">FPGA Chip</label>
-                        <select id="inputFPGA" class="form-control" name="inputFPGA">
+                        <label for="inputFpgaPart">FPGA Part</label>
+                        <select id="inputFpgaPart" class="form-control" name="inputFpgaPart">
                             <option selected>xc7a100tcsg324-1</option>
                             <option disabled>not supported</option>
                         </select>
@@ -69,36 +69,36 @@
                         </div>
                     </div>
                 </div>
+                <!--<div class="form-group">-->
+                    <!--<label for="XdcFileName">XdcFileName</label>-->
+                    <!--<input type="text" class="form-control" id="XdcFileName" name="XdcFileName">-->
+                <!--</div>-->
                 <div class="form-group">
-                    <label for="XdcFileName">XdcFileName</label>
-                    <input type="text" class="form-control" id="XdcFileName" name="XdcFileName">
-                </div>
-                <div class="form-group">
-                    <label for="inputXdcFile">XdcFile</label>
+                    <label for="inputXdcFile">Constraint(XDC) file</label>
                     <textarea type="text" class="form-control" id="inputXdcFile" name="inputXdcFile"></textarea>
                 </div>
+                <!--<div class="form-group">-->
+                    <!--<label for="inputZipFile">ZipFile</label>-->
+                    <!--<textarea type="text" class="form-control" id="inputZipFile" name="inputZipFile"></textarea>-->
+                <!--</div>-->
+                <!--<div class="form-group">-->
+                    <!--<label for="SrcFileName1">SrcFileName1</label>-->
+                    <!--<input type="text" class="form-control" id="SrcFileName1" name="SrcFileName1">-->
+                <!--</div>-->
                 <div class="form-group">
-                    <label for="inputZipFile">ZipFile</label>
-                    <textarea type="text" class="form-control" id="inputZipFile" name="inputZipFile"></textarea>
+                    <label for="inputSrcFile1">Verilog source file</label>
+                    <textarea type="text" class="form-control" id="inputSrcFile1" name="inputSrcFile1"></textarea>
                 </div>
-                <div class="form-group">
-                    <label for="SrcFileName1">SrcFileName1</label>
-                    <input type="text" class="form-control" id="SrcFileName1" name="SrcFileName1">
-                </div>
-                <div class="form-group">
-                    <label for="inputFile1">SourceFile1</label>
-                    <textarea type="text" class="form-control" id="inputFile1" name="inputFile1"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="SrcFileName2">SrcFileName2</label>
-                    <input type="text" class="form-control" id="SrcFileName2" name="SrcFileName2">
-                </div>
-                <div class="form-group">
-                    <label for="inputFile2">SourceFile2</label>
-                    <textarea type="text" class="form-control" id="inputFile2" name="inputFile2"></textarea>
-                </div>
+                <!--<div class="form-group">-->
+                    <!--<label for="SrcFileName2">SrcFileName2</label>-->
+                    <!--<input type="text" class="form-control" id="SrcFileName2" name="SrcFileName2">-->
+                <!--</div>-->
+                <!--<div class="form-group">-->
+                    <!--<label for="inputSrcFile2">SourceFile2</label>-->
+                    <!--<textarea type="text" class="form-control" id="inputSrcFile2" name="inputSrcFile2"></textarea>-->
+                <!--</div>-->
 
-                <button type="submit" class="btn btn-primary" id="submitbutton">Submit</button>
+                <button formtarget="_blank" type="submit" class="btn btn-primary" id="submitbutton">Submit</button>
             </form>
 
         </div>
