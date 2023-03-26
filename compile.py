@@ -34,7 +34,7 @@ def compile_new(job):
     work_root = os.path.join(job.jobs_dir, str(job.id))
     command = f4pga_docker_spawner + ' ' + work_root + ' ' + str(job.simple) + ' ' + job.device + ' ' + job.filenames[0] + ' ' + job.filenames[1]
     print(command)
-    os.system(command)
+    return os.system(command)
     # tcl_build_path = os.path.join(os.getcwd(), vivado_tools_dir, tcl_build)
     # ip_dir = os.path.join(os.getcwd(), vivado_ip_dir)
     # os.system('unzip -o ' + work_root + '/' + filenames[0] + ' -d ' + work_root)

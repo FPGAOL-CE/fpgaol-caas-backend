@@ -63,22 +63,27 @@ class StatusHandler(RequestHandler):
         pending_jobs = []
         finished_jobs = []
         for each in running_jobs_temp:
-            running_jobs.append(each[0])
+            if id == each[0]:
+                self.write('running')
+            # running_jobs.append(each[0])
 
         for each in pending_jobs_temp:
-            pending_jobs.append(each[0])
+            if id == each[0]:
+                self.write('pending')
+            # pending_jobs.append(each[0])
 
         for each in finished_jobs_temp:
-            finished_jobs.append(each[0])
+            if id == each[0]:
+                self.write('finished.%s' % ('succeeded' if each[4] else 'failed'))
+            # finished_jobs.append(each[0])
 
-        if id in running_jobs:
-            self.write('running')
-        elif id in pending_jobs:
-            self.write('pending')
-        elif id in finished_jobs or id in old_jobids:
-            self.write('finished')
-        else:
-            self.write('error')
+        # if id in running_jobs:
+        # elif id in pending_jobs:
+            # self.write('pending')
+        # elif id in finished_jobs or id in old_jobids:
+            # self.write('finished.%s' % 'succeeded' if )
+        # else:
+            # self.write('error')
 
 class InteractiveSubmitHandler(RequestHandler):
     def post(self):
@@ -335,19 +340,29 @@ class OldSubmitHandler(RequestHandler):
         # self.write({'data':data})
 
 class DownloadHandler(RequestHandler):
-    async def get(self, id):
+    async def get(self, id, filetype):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Headers", "x-requested-with")
         self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-        bitfile = "./jobs/%s/top.bit" % id
-        file_exist = os.path.exists(bitfile)
+        file = ''
+        filename = ''
+        if (filetype == 'bitstream'):
+            file = "./jobs/%s/top.bit" % id
+            filename = 'top-%s.bit' % id
+        elif (filetype == 'log'):
+            file = "./jobs/%s/top.log" % id
+            filename = 'top-%s.log' % id
+        else:
+            self.write("Invalid file type requested!")
+            return
+        file_exist = os.path.exists(file)
         if not file_exist:
-            self.write("<p>Bitstream file not found for id %s!</p>" % str(id))
+            self.write("<p>Requested %s not found for id %s!</p>" % (filetype, str(id)))
             return
         self.set_header('Content-Type', 'application/octet-stream')
-        self.set_header('Content-Disposition', 'attachment; filename=top-%s.bit' % id)
+        self.set_header('Content-Disposition', 'attachment; filename=%s' % filename)
         # the aiofiles use thread pool,not real asynchronous
-        async with aiofiles.open(bitfile, 'rb') as f:
+        async with aiofiles.open(file, 'rb') as f:
             while True:
                 data = await f.read(1024)
                 if not data:
@@ -383,7 +398,7 @@ application = tornado.web.Application([
     (r'/about', aboutHandler),
     (r'/status/(\w+)',StatusHandler),
     # (r'/query/(\w+)',QueryHandler),
-    (r'/download/(\w+)',DownloadHandler),
+    (r'/download/(\w+)/(\w+)',DownloadHandler),
     # (r'/api_joblist', JobListHandler),
     (r"/", MainHandler),
     (r'/(.*)', StaticFileHandler, {'path': './page/'}),

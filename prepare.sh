@@ -4,3 +4,4 @@
 export PATH=/opt/Xilinx/Vivado/2019.1/bin:$PATH
 
 mkdir -p jobs
+uuidgen > token

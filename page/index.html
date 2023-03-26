@@ -47,6 +47,7 @@
                         </button>
 
                         <div class="dropdown-menu">
+                            <a class="dropdown-item" id="example_fpgaol1">FPGAOL1(for login users)</a>
                             <a class="dropdown-item" id="example_fpgaol2">FPGAOL2(for guests)</a>
 							<!--<a class="dropdown-item">hexplay</a>-->
 							<!--<div class="dropdown-divider"></div>-->
@@ -107,7 +108,12 @@
 
 		<div class="container">
 			<p id="server_reply">No reply from server.</p>
-			<button formtarget="_blank" class="btn btn-primary" id="downloadbutton" href="#" disabled>Download Bitstream</button>
+			<div class="btn-group col-md-4">
+				<button formtarget="_blank" class="btn btn-primary" id="downloadbitstreambutton" href="#" disabled>Download Bitstream</button>
+			</div>
+			<div class="btn-group col-md-4">
+				<button formtarget="_blank" class="btn btn-primary" id="downloadlogbutton" href="#" disabled>Download Log</button>
+			</div>
 		</div>
 
 

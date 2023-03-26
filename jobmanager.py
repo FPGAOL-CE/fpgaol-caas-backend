@@ -17,10 +17,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def try_compile(job, callback):
+    returnval = -1
     try:
-        compile_new(job)
+        returnval = compile_new(job)
     except Exception as e:
         logger.warning('try_compile: job %s got exception %s!' % (str(job.id), str(e)))
+    job.suceeded = returnval == 0
     callback(job.id)
 
 
@@ -33,6 +35,7 @@ class job:
         self.device = device
         self.simple = simple
         self.jobs_dir = jobs_dir
+        self.suceeded = 0
         # self._create(id, sourcecode)
 
         try:
@@ -70,6 +73,7 @@ class jobManager:
         self.pending_job_max = pending_jobs_max
         self.pending_jobs = queue.Queue(pending_jobs_max)
         self.using_job_id = set()
+        # this is kinda strange...
         self.finished_jobs = []
         self.old_jobs = os.listdir(JOBS_DIR)
 
@@ -84,6 +88,12 @@ class jobManager:
         self.using_job_id.add(id)
         a_new_job = job(id, sourcecode, device, simple=simple)
         self.lock.acquire()
+        # remove finished job with same id
+        # low efficiency may be
+        for j in self.finished_jobs:
+            if j.id == id:
+                self.finished_jobs.remove(j)
+                del j
         if len(self.running_jobs) < self.running_job_max:
             self.run_a_job(id, a_new_job)
         else:
@@ -91,7 +101,7 @@ class jobManager:
         self.lock.release()
 
     def job_finish(self, id):
-        logger.info('\njob_finish: %s finished. ' % id)
+        logger.info('\njob_finish: %s finished, %s. ' % (id, 'succeeded' if self.running_jobs[id].suceeded else 'failed'))
         # LogEx(id)
         self.lock.acquire()
         self.running_jobs[id].finish_time = time.strftime(
@@ -127,7 +137,7 @@ class jobManager:
 
         for job in self.finished_jobs:
             ret3.append([job.id, job.submit_time,
-                         job.start_time, job.finish_time])
+                         job.start_time, job.finish_time, job.suceeded])
 
         self.lock.release()
         return ret1, ret2, ret3, self.old_jobs

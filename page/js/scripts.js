@@ -1,19 +1,22 @@
 $(document).ready(function () {
     $('#example_fpgaol2').click(function () {
         $('#inputJobId').val(Math.round(Math.random() * 8388607 + 8388608).toString(16));
-        $('#inputXdcFile').text(exampleled[0]);
-        $('#inputSrcFile1').text(exampleled[1]);
+        $('#inputXdcFile').text(example_fpgaol2[0]);
+        $('#inputSrcFile1').text(example_fpgaol2[1]);
     });
 	//updater.poll();
 	$('#submitbutton').click(function () {updater.submit()});
-	$('#downloadbutton').click(function (e) {updater.download(e)});
+	$('#downloadbitstreambutton').click(function (e) {updater.download(e, 'bitstream')});
+	$('#downloadlogbutton').click(function (e) {updater.download(e, 'log')});
 });
 
 //$('#XdcFileName').val("fpgaol01.xdc");
 //$('#SrcFileName1').val("top.v");
 
 var updater = {
-	sleeptime: 10000,
+	cntr: 0,
+	animarr: ['/', '-', '\\', '|'],
+	sleeptime: 5000,
 	ispolling: false,
 	polllaunched: false,
 
@@ -33,16 +36,19 @@ var updater = {
 
 	onSuccess: function(response) {
 		console.log(response);
-		if (response == 'finished') {
+		if (response.includes('finished')) {
 			console.log("Done!");
-			$('#downloadbutton').prop('disabled', false)
+			if (response.includes('succeeded')) {
+				$('#downloadbitstreambutton').prop('disabled', false)
+			}
+			$('#downloadlogbutton').prop('disabled', false)
 			updater.ispolling = false;
 		}
 		updater.onError(response);
 	},
 
 	onError: function(response) {
-		$('#server_reply').text(response);
+		$('#server_reply').text(updater.animarr[updater.cntr++ % 4] + '\t' + response);
 		window.setTimeout(updater.poll, updater.sleeptime);
 	},
 
@@ -55,22 +61,18 @@ var updater = {
 			window.setTimeout(updater.poll, updater.sleeptime);
 		}
 		updater.ispolling = true;
-		$('#downloadbutton').prop('disabled', true)
+		$('#downloadbitstreambutton').prop('disabled', true)
+		$('#downloadlogbutton').prop('disabled', true)
 	},
 
-	download: function(e) {
+	download: function(e, filetype) {
 		e.preventDefault();
 		var jobid = $('#inputJobId').val();
-		window.location.href = "/download/" + jobid;
-			//$.ajax({
-				//url: '/download/' + jobid,
-				//type: 'GET'
-			//});
-		//updater.isrunning = false;
+		window.location.href = "/download/" + jobid + '/' + filetype;
 	}
 }
 
-var exampleled = [` # FPGAOL2
+var example_fpgaol2 = [` # FPGAOL2
 set_property -dict {PACKAGE_PIN B8 IOSTANDARD LVCMOS33} [get_ports {clk}];
 
 set_property -dict {PACKAGE_PIN K17 IOSTANDARD LVCMOS33} [get_ports {led[0]}];

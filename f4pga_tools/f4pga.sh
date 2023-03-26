@@ -16,7 +16,8 @@ if [[ "$simplejob" != "1" ]]; then
 	exit 1
 fi
 
-cp -v f4pga_tools/Makefile $workroot/
+cp f4pga_tools/compile.sh $workroot/
+cp f4pga_tools/Makefile $workroot/
 docker run -it --rm \
 	-v `pwd`/$workroot:/mnt \
 	-e TOP=top \
@@ -24,4 +25,4 @@ docker run -it --rm \
 	-e SOURCES=/tmp/$srcfile1 \
 	-e BUILDDIR=/tmp/build \
 	--tmpfs /tmp \
-	carlosedp/symbiflow bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate xc7 && cp -a /mnt/* /tmp && make -C /tmp && cp /tmp/build/top.bit /mnt"
+	carlosedp/symbiflow /mnt/compile.sh
