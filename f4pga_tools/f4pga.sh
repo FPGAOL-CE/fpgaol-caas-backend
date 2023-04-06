@@ -18,7 +18,7 @@ fi
 
 cp f4pga_tools/compile.sh $workroot/
 cp f4pga_tools/Makefile $workroot/
-docker run -it --rm \
+docker run -it --rm -m 2G \
 	-v `pwd`/$workroot:/mnt \
 	-e TOP=top \
 	-e XDC=/tmp/$xdcfile \

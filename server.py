@@ -59,9 +59,9 @@ class StatusHandler(RequestHandler):
         running_jobs_temp, pending_jobs_temp, finished_jobs_temp, old_jobids = jm.list_jobs()
         
         # feels inefficient...
-        running_jobs = []
-        pending_jobs = []
-        finished_jobs = []
+        # running_jobs = []
+        # pending_jobs = []
+        # finished_jobs = []
         for each in running_jobs_temp:
             if id == each[0]:
                 self.write('running')
@@ -74,7 +74,7 @@ class StatusHandler(RequestHandler):
 
         for each in finished_jobs_temp:
             if id == each[0]:
-                self.write('finished.%s' % ('succeeded' if each[4] else 'failed'))
+                self.write('finished.%s%s' % ('succeeded' if each[4] else 'failed', '.timeout' if each[5] else ''))
             # finished_jobs.append(each[0])
 
         # if id in running_jobs:
@@ -185,73 +185,73 @@ class InteractiveSubmitHandler(RequestHandler):
     # def on_connection_close(self):
         # pass
 
-class OldSubmitHandler(RequestHandler):
-    def post(self):
-        self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
-        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-        code = 0
-        msg = "提交编译失败"
-        body_arguments = self.request.body_arguments
-        # print(body_arguments.keys())
-        id = bytes.decode(body_arguments['inputJobId'][0], encoding='utf-8')
-        logger.info("\nCompilingPrjid%s"%id)
-        inputFPGA = bytes.decode(
-            body_arguments['inputFPGA'][0], encoding='utf-8')
-        #XdcFileName = bytes.decode(
-            #body_arguments['XdcFileName'][0], encoding='utf-8')
-        #inputXdcFile = bytes.decode(
-            #body_arguments['inputXdcFile'][0], encoding='utf-8')
-        ZipFileName = 'UserZip.zip'
-        XdcFileName = 'top.xdc'
-        SrcFileName1 = 'top.v'
+# class OldSubmitHandler(RequestHandler):
+    # def post(self):
+        # self.set_header("Access-Control-Allow-Origin", "*")
+        # self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        # self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+        # code = 0
+        # msg = "提交编译失败"
+        # body_arguments = self.request.body_arguments
+        # # print(body_arguments.keys())
+        # id = bytes.decode(body_arguments['inputJobId'][0], encoding='utf-8')
+        # logger.info("\nCompilingPrjid%s"%id)
+        # inputFPGA = bytes.decode(
+            # body_arguments['inputFPGA'][0], encoding='utf-8')
+        # #XdcFileName = bytes.decode(
+            # #body_arguments['XdcFileName'][0], encoding='utf-8')
+        # #inputXdcFile = bytes.decode(
+            # #body_arguments['inputXdcFile'][0], encoding='utf-8')
+        # ZipFileName = 'UserZip.zip'
+        # XdcFileName = 'top.xdc'
+        # SrcFileName1 = 'top.v'
         
-        inputZipFile = self.request.files['inputZipFile'][0].get('body')
-  #      SrcFileName1 = bytes.decode(
-  #          body_arguments['SrcFileName1'][0], encoding='utf-8')
-  #      inputFile1 = bytes.decode(
-  #          body_arguments['inputFile1'][0], encoding='utf-8')
-  #      SrcFileName2 = bytes.decode(
-  #          body_arguments['SrcFileName2'][0], encoding='utf-8')
-  #      inputFile2 = bytes.decode(
-  #          body_arguments['inputFile2'][0], encoding='utf-8')
+        # inputZipFile = self.request.files['inputZipFile'][0].get('body')
+  # #      SrcFileName1 = bytes.decode(
+  # #          body_arguments['SrcFileName1'][0], encoding='utf-8')
+  # #      inputFile1 = bytes.decode(
+  # #          body_arguments['inputFile1'][0], encoding='utf-8')
+  # #      SrcFileName2 = bytes.decode(
+  # #          body_arguments['SrcFileName2'][0], encoding='utf-8')
+  # #      inputFile2 = bytes.decode(
+  # #          body_arguments['inputFile2'][0], encoding='utf-8')
 
-        #inputFiles = body_arguments['inputFile1']
-        # SrcFileName = body_arguments['SrcFilname']
-        #print(id, XdcFileName, SrcFileName1, SrcFileName2, inputFPGA)
+        # #inputFiles = body_arguments['inputFile1']
+        # # SrcFileName = body_arguments['SrcFilname']
+        # #print(id, XdcFileName, SrcFileName1, SrcFileName2, inputFPGA)
 
-        # Our convention now: XDC file MUST be the first
-        sourcecode = [[XdcFileName, inputXdcFile], [SrcFileName1, inputSrcFile1]]
+        # # Our convention now: XDC file MUST be the first
+        # sourcecode = [[XdcFileName, inputXdcFile], [SrcFileName1, inputSrcFile1]]
 
-        # sourcecode = [[ZipFileName, inputZipFile]]
+        # # sourcecode = [[ZipFileName, inputZipFile]]
 
-        # for i,inputFile in enumerate(inputFiles):
-            # sourcecode.append([str(i)+'.v',bytes.decode(inputFile,encoding='utf-8')])
+        # # for i,inputFile in enumerate(inputFiles):
+            # # sourcecode.append([str(i)+'.v',bytes.decode(inputFile,encoding='utf-8')])
 
-  #      print(sourcecode)
-        # if  id and inputFPGA and XdcFileName and inputXdcFile and inputFiles:
-        if  id and inputFPGA and inputZipFile:
-            code = 1 
-            msg = "提交编译成功，请使用查询接口查询编译状态"
-        else:
-            if not id:
-                msg += ",the id is not correct"
-            if not inputFPGA:
-                msg += ",the inputFPGA is not correct"
-            if not inputZipFile:
-                msg += ",the inputZipFile is not correct"
-            data = {"code": code,"msg": msg}
-            self.write(data)
-            logger.info("\nCompilingPrjid%sFinish"%id)
-            return 
+  # #      print(sourcecode)
+        # # if  id and inputFPGA and XdcFileName and inputXdcFile and inputFiles:
+        # if  id and inputFPGA and inputZipFile:
+            # code = 1 
+            # msg = "提交编译成功，请使用查询接口查询编译状态"
+        # else:
+            # if not id:
+                # msg += ",the id is not correct"
+            # if not inputFPGA:
+                # msg += ",the inputFPGA is not correct"
+            # if not inputZipFile:
+                # msg += ",the inputZipFile is not correct"
+            # data = {"code": code,"msg": msg}
+            # self.write(data)
+            # logger.info("\nCompilingPrjid%sFinish"%id)
+            # return 
 
-        # if SrcFileName2:
-            # sourcecode.append([SrcFileName2, inputFile2])
-        data = {"code": code,"msg": msg}
-        self.write(data)
+        # # if SrcFileName2:
+            # # sourcecode.append([SrcFileName2, inputFile2])
+        # data = {"code": code,"msg": msg}
+        # self.write(data)
 
-        jm.add_a_job(id, sourcecode, inputFPGA)
-        # self.redirect('/jobs')
+        # jm.add_a_job(id, sourcecode, inputFPGA)
+        # # self.redirect('/jobs')
 
 
 # class QueryHandler(RequestHandler):

@@ -17,12 +17,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def try_compile(job, callback):
-    returnval = -1
+    returnval = -100
     try:
         returnval = compile_new(job)
     except Exception as e:
         logger.warning('try_compile: job %s got exception %s!' % (str(job.id), str(e)))
-    job.suceeded = returnval == 0
+    job.succeeded = returnval == 0
+    job.timeouted = returnval == -1
     callback(job.id)
 
 
@@ -35,7 +36,8 @@ class job:
         self.device = device
         self.simple = simple
         self.jobs_dir = jobs_dir
-        self.suceeded = 0
+        self.succeeded = 0
+        self.timeouted = 0
         # self._create(id, sourcecode)
 
         try:
@@ -101,7 +103,7 @@ class jobManager:
         self.lock.release()
 
     def job_finish(self, id):
-        logger.info('\njob_finish: %s finished, %s. ' % (id, 'succeeded' if self.running_jobs[id].suceeded else 'failed'))
+        logger.info('\njob_finish: %s finished, %s. ' % (id, 'succeeded' if self.running_jobs[id].succeeded else 'failed'))
         # LogEx(id)
         self.lock.acquire()
         self.running_jobs[id].finish_time = time.strftime(
@@ -137,7 +139,7 @@ class jobManager:
 
         for job in self.finished_jobs:
             ret3.append([job.id, job.submit_time,
-                         job.start_time, job.finish_time, job.suceeded])
+                         job.start_time, job.finish_time, job.succeeded, job.timeouted])
 
         self.lock.release()
         return ret1, ret2, ret3, self.old_jobs
