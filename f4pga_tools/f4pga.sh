@@ -25,4 +25,4 @@ docker run -it --rm -m 8G \
 	-e SOURCES=/tmp/$srcfile1 \
 	-e BUILDDIR=/tmp/build \
 	--tmpfs /tmp \
-	carlosedp/symbiflow /mnt/compile.sh
+	regymm/symbiflow /mnt/compile.sh
