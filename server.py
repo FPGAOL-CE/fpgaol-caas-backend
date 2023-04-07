@@ -74,7 +74,10 @@ class StatusHandler(RequestHandler):
 
         for each in finished_jobs_temp:
             if id == each[0]:
-                self.write('finished.%s%s' % ('succeeded' if each[4] else 'failed', '.timeout' if each[5] else ''))
+                self.write('finished.%s%s%s' % 
+                           ('succeeded' if each[4] else 'failed',
+                            '.timeout' if each[5] else '', 
+                            '.outofmemory' if each[6] else ''))
             # finished_jobs.append(each[0])
 
         # if id in running_jobs:

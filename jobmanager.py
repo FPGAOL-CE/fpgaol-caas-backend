@@ -24,6 +24,7 @@ def try_compile(job, callback):
         logger.warning('try_compile: job %s got exception %s!' % (str(job.id), str(e)))
     job.succeeded = returnval == 0
     job.timeouted = returnval == -1
+    job.killed = returnval == 233
     callback(job.id)
 
 
@@ -38,6 +39,7 @@ class job:
         self.jobs_dir = jobs_dir
         self.succeeded = 0
         self.timeouted = 0
+        self.killed = 0
         # self._create(id, sourcecode)
 
         try:
@@ -139,7 +141,7 @@ class jobManager:
 
         for job in self.finished_jobs:
             ret3.append([job.id, job.submit_time,
-                         job.start_time, job.finish_time, job.succeeded, job.timeouted])
+                         job.start_time, job.finish_time, job.succeeded, job.timeouted, job.killed])
 
         self.lock.release()
         return ret1, ret2, ret3, self.old_jobs
