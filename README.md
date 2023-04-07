@@ -2,9 +2,10 @@
 
 #### How to run this project
 
-Install Docker, build https://github.com/FPGAOL-CE/osstoolchain-docker-things and install to system, this project depends on a modified version of `carlosedp/symbiflow`. 
+Install Docker, `docker pull regymm/symbiflow`
+Or build from scratch at https://github.com/FPGAOL-CE/osstoolchain-docker-things
 
-Install python dependancies. 
+Install python tornado. 
 
 `mkdir jobs`
 
