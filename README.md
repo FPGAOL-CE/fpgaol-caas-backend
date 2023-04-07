@@ -2,15 +2,13 @@
 
 #### How to run this project
 
-Install Docker, `docker pull regymm/symbiflow`
-Or build from scratch at https://github.com/FPGAOL-CE/osstoolchain-docker-things
+`docker pull regymm/symbiflow`
+Or build from scratch according to https://github.com/FPGAOL-CE/osstoolchain-docker-things . The image is around 20 GB. 
 
-Install python tornado. 
+`pip install tornado aiofiles`
 
-`mkdir jobs`
+`uuidgen > token` For management panel access http://127.0.0.1:18888/jobs?token=uuid_in_token_file. 
 
-`uuidgen > token`
+`python server.py` For some reason, nohup or setsid launch have problems. Tmux is recommended for keeping server alive. 
 
-`python server.py`
-
-Default port 18888. 
+Then check at http://127.0.0.1:18888. To serve frontend and backend together, you can overwrite the `page/` files using the built frontend(`dist/` from `fpgaol-caas-frontend`). 
