@@ -9,6 +9,8 @@ Or build from scratch according to https://github.com/FPGAOL-CE/osstoolchain-doc
 
 `uuidgen > token` For management panel access http://127.0.0.1:18888/jobs?token=uuid_in_token_file. 
 
+`sudo mkdir /chipdb` Have somewhere to save chipdb(will be generated on first compilation).
+
 `python server.py` For some reason, nohup or setsid launch have problems. Tmux is recommended for keeping server alive. 
 
 Then check at http://127.0.0.1:18888. To serve frontend and backend together, you can overwrite the `page/` files using the built frontend(`dist/` from `fpgaol-caas-frontend`). 
