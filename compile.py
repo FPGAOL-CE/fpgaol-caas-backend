@@ -9,7 +9,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 compiler_timeout = 600
-f4pga_docker_spawner = 'f4pga_tools/f4pga.sh'
+f4pga_docker_spawner = 'fpga_tools/f4pga.sh'
+openxc7_docker_spawner = 'fpga_tools/openxc7.sh'
 
 #vivado_exec = '/opt/Xilinx/Vivado/2020.2/bin/vivado'
 # vivado_exec = '/tools/Xilinx/Vivado/2019.2/bin/vivado'
@@ -35,16 +36,22 @@ def compile_new(job):
                 job.simple, job.jobs_dir, job.id, job.filenames, job.device)
 
     work_root = os.path.join(job.jobs_dir, str(job.id))
-    # command = f4pga_docker_spawner + ' ' + work_root + ' ' + str(job.simple) + ' ' + job.device + ' ' + job.filenames[0] + ' ' + job.filenames[1]
+    # command = openxc7_docker_spawner + ' ' + work_root + ' ' + str(job.simple) + ' ' + job.device + ' ' + job.filenames[0] + ' ' + job.filenames[1]
     # print(command)
+
     try:
-        output = check_output([f4pga_docker_spawner, work_root, str(job.simple), job.device, job.filenames[0], job.filenames[1]], stderr=STDOUT, timeout=compiler_timeout)
+        output = check_output([openxc7_docker_spawner, work_root, str(job.simple), job.device, job.filenames[0], job.filenames[1]], stderr=STDOUT, timeout=compiler_timeout)
+        print(output)
         return 0
     except CalledProcessError as cpe:
+        print('CallProcessError!')
         return cpe.returncode
     except TimeoutExpired:
+        print('TimeoutExpired!')
         return -1
+
     # return os.system(command)
+
     # tcl_build_path = os.path.join(os.getcwd(), vivado_tools_dir, tcl_build)
     # ip_dir = os.path.join(os.getcwd(), vivado_ip_dir)
     # os.system('unzip -o ' + work_root + '/' + filenames[0] + ' -d ' + work_root)
