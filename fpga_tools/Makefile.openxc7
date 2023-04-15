@@ -14,7 +14,7 @@ program: top.bit
 	openFPGALoader --board arty --bitstream $<
 
 top.json: top.v
-	yosys -p "synth_xilinx -flatten -abc9 -nobram -arch xc7 -top top; write_json top.json" $< > ${LOGFILE} 2>&1
+	yosys -p "synth_xilinx -flatten -abc9 -arch xc7 -top top; write_json top.json" $< > ${LOGFILE} 2>&1
 
 # The chip database only needs to be generated once
 # that is why we don't clean it with make clean
