@@ -1,0 +1,40 @@
+DB_DIR=/nextpnr-xilinx/xilinx/external/prjxray-db
+CHIPDB=/chipdb
+CHIPFAM=artix7
+LOGFILE=top.log
+
+PART = xc7a100tcsg324-1
+#PART = xc7a35tcsg324-1
+
+.PHONY: all
+all: top.bit
+
+.PHONY: program
+program: top.bit
+	openFPGALoader --board arty --bitstream $<
+
+top.json: top.v
+	yosys -p "synth_xilinx -flatten -abc9 -arch xc7 -top top; write_json top.json" $< > ${LOGFILE} 2>&1
+
+# The chip database only needs to be generated once
+# that is why we don't clean it with make clean
+${CHIPDB}/${PART}.bin:
+	pypy3 /nextpnr-xilinx/xilinx/python/bbaexport.py --device ${PART} --bba ${PART}.bba
+	bbasm -l ${PART}.bba ${CHIPDB}/${PART}.bin
+	rm -f ${PART}.bba
+
+top.fasm: top.json ${CHIPDB}/${PART}.bin
+	nextpnr-xilinx --chipdb ${CHIPDB}/${PART}.bin --xdc top.xdc --json top.json --fasm $@ --verbose --debug >> ${LOGFILE} 2>&1
+	
+top.frames: top.fasm
+	fasm2frames --part ${PART} --db-root ${DB_DIR}/${CHIPFAM} $< > $@ #FIXME: fasm2frames should be on PATH
+
+top.bit: top.frames
+	xc7frames2bit --part_file ${DB_DIR}/${CHIPFAM}/${PART}/part.yaml --part_name ${PART} --frm_file $< --output_file $@ >> ${LOGFILE} 2>&1
+
+.PHONY: clean
+clean:
+	@rm -f *.bit
+	@rm -f *.frames
+	@rm -f *.fasm
+	@rm -f *.json

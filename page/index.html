@@ -8,12 +8,12 @@
     <link href="css/page.css" rel="stylesheet">
     <meta charset="utf8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>fpgaol compiling server</title>
+    <title>FPGAOL CaaS</title>
 </head>
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">FPGAOL Compiling Server</a>
+		<a class="navbar-brand" href="/"><b>FPGAOL-CE</b> <i style="color:gray">Compiling as a Service</i></a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -24,12 +24,12 @@
                 <li class="nav-item active">
                     <a class="nav-link" href="/">SUBMIT<span class="sr-only">(current)</span></a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="jobs">JOBS</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">SYSTEM</a>
-                </li>
+                <!--<li class="nav-item">-->
+                    <!--<a class="nav-link" href="jobs">JOBS</a>-->
+                <!--</li>-->
+                <!--<li class="nav-item">-->
+                    <!--<a class="nav-link" href="#">SYSTEM</a>-->
+                <!--</li>-->
                 <li class="nav-item">
                     <a class="nav-link" href="about">ABOUT</a>
                 </li>
@@ -37,71 +37,87 @@
         </div>
     </nav>
     <div class="container">
+		<div class="container">
+			<h3>Please do not use backend directly!</h3>
+		</div class="container">
         <div class="container">
             <form method="POST" action="submit">
                 <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label for="inputJobId">JobID</label>
-                        <input type="text" class="form-control" id="inputJobId" name="inputJobId">
+                    <div class="btn-group form-group col-md-4">
+                        <button type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            Initialize(Click me)
+                        </button>
+
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" id="example_fpgaol1">FPGAOL1(for login users)</a>
+                            <a class="dropdown-item" id="example_fpgaol2">FPGAOL2(for guests)</a>
+							<!--<a class="dropdown-item">hexplay</a>-->
+							<!--<div class="dropdown-divider"></div>-->
+							<!--<a class="dropdown-item">ERROR example 1</a>-->
+							<!--<a class="dropdown-item">ERROR example 2</a>-->
+							<!--<a class="dropdown-item">ERROR example 3</a>-->
+							<!--<a class="dropdown-item">ERROR example 4</a>-->
+                        </div>
                     </div>
                     <div class="form-group col-md-4">
-                        <label for="inputFPGA">FPGA Chip</label>
-                        <select id="inputFPGA" class="form-control" name="inputFPGA">
+                        <label for="inputJobId">JobID</label>
+                        <input type="text" class="form-control" id="inputJobId" name="inputJobId" readonly>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="inputFpgaPart">FPGA Part</label>
+                        <select id="inputFpgaPart" class="form-control" name="inputFpgaPart" readonly>
                             <option selected>xc7a100tcsg324-1</option>
                             <option disabled>not supported</option>
                         </select>
                     </div>
 
-                    <div class="btn-group form-group col-md-4">
-                        <button type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown"
-                            aria-haspopup="true" aria-expanded="false">
-                            load an example
-                        </button>
+                </div>
+				<div class="form-row">
+					<!--<div class="form-group">-->
+						<!--<label for="XdcFileName">XdcFileName</label>-->
+						<!--<input type="text" class="form-control" id="XdcFileName" name="XdcFileName">-->
+					<!--</div>-->
+					<div class="form-group col-md-6">
+						<label for="inputXdcFile">Constraint(XDC) file</label>
+						<textarea type="text" class="form-control" id="inputXdcFile" name="inputXdcFile"></textarea>
+					</div>
+					<!--<div class="form-group">-->
+						<!--<label for="inputZipFile">ZipFile</label>-->
+						<!--<textarea type="text" class="form-control" id="inputZipFile" name="inputZipFile"></textarea>-->
+					<!--</div>-->
+					<!--<div class="form-group">-->
+						<!--<label for="SrcFileName1">SrcFileName1</label>-->
+						<!--<input type="text" class="form-control" id="SrcFileName1" name="SrcFileName1">-->
+					<!--</div>-->
+					<div class="form-group col-md-6">
+						<label for="inputSrcFile1">Verilog source file</label>
+						<textarea type="text" class="form-control" id="inputSrcFile1" name="inputSrcFile1"></textarea>
+					</div>
+				</div>
+                <!--<div class="form-group">-->
+                    <!--<label for="SrcFileName2">SrcFileName2</label>-->
+                    <!--<input type="text" class="form-control" id="SrcFileName2" name="SrcFileName2">-->
+                <!--</div>-->
+                <!--<div class="form-group">-->
+                    <!--<label for="inputSrcFile2">SourceFile2</label>-->
+                    <!--<textarea type="text" class="form-control" id="inputSrcFile2" name="inputSrcFile2"></textarea>-->
+                <!--</div>-->
 
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" id="exampleled">led</a>
-                            <a class="dropdown-item">hexplay</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item">ERROR example 1</a>
-                            <a class="dropdown-item">ERROR example 2</a>
-                            <a class="dropdown-item">ERROR example 3</a>
-                            <a class="dropdown-item">ERROR example 4</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="XdcFileName">XdcFileName</label>
-                    <input type="text" class="form-control" id="XdcFileName" name="XdcFileName">
-                </div>
-                <div class="form-group">
-                    <label for="inputXdcFile">XdcFile</label>
-                    <textarea type="text" class="form-control" id="inputXdcFile" name="inputXdcFile"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="inputZipFile">ZipFile</label>
-                    <textarea type="text" class="form-control" id="inputZipFile" name="inputZipFile"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="SrcFileName1">SrcFileName1</label>
-                    <input type="text" class="form-control" id="SrcFileName1" name="SrcFileName1">
-                </div>
-                <div class="form-group">
-                    <label for="inputFile1">SourceFile1</label>
-                    <textarea type="text" class="form-control" id="inputFile1" name="inputFile1"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="SrcFileName2">SrcFileName2</label>
-                    <input type="text" class="form-control" id="SrcFileName2" name="SrcFileName2">
-                </div>
-                <div class="form-group">
-                    <label for="inputFile2">SourceFile2</label>
-                    <textarea type="text" class="form-control" id="inputFile2" name="inputFile2"></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-primary" id="submitbutton">Submit</button>
+                <button formtarget="_blank" type="submit" class="btn btn-primary" id="submitbutton">Submit</button>
             </form>
 
         </div>
+
+		<div class="container">
+			<p id="server_reply">No reply from server.</p>
+			<div class="btn-group col-md-4">
+				<button formtarget="_blank" class="btn btn-primary" id="downloadbitstreambutton" href="#" disabled>Download Bitstream</button>
+			</div>
+			<div class="btn-group col-md-4">
+				<button formtarget="_blank" class="btn btn-primary" id="downloadlogbutton" href="#" disabled>Download Log</button>
+			</div>
+		</div>
 
 
     </div>

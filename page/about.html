@@ -8,12 +8,12 @@
     <link href="css/page.css" rel="stylesheet">
     <meta charset="utf8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>fpgaol compiling server</title>
+    <title>FPGAOL CaaS</title>
 </head>
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">FPGAOL Compiling Server</a>
+		<a class="navbar-brand" href="/"><b>FPGAOL-CE</b> <i style="color:gray">Compiling as a Service</i></a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -23,12 +23,12 @@
                 <li class="nav-item active">
                     <a class="nav-link" href="/">SUBMIT</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="jobs">JOBS<span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">SYSTEM</a>
-                </li>
+                <!--<li class="nav-item">-->
+                    <!--<a class="nav-link" href="jobs">JOBS<span class="sr-only">(current)</span></a>-->
+                <!--</li>-->
+                <!--<li class="nav-item">-->
+                    <!--<a class="nav-link" href="#">SYSTEM</a>-->
+                <!--</li>-->
                 <li class="nav-item">
                     <a class="nav-link" href="about">ABOUT</a>
                 </li>
@@ -37,49 +37,16 @@
     </nav>
     <div class="container">
         <pre>
-        简易的fpgaol编译服务器
-
-        /submit
-        方法：POST
-        参数：inputJobId 对应工程号（唯一表示，每个工程号必须不同）
-
-​			inputFPGA 对应板子编号 现在只有xc7a100tcsg324-1
-
-​			inputZipFile 所有源码一起打包，包括xdc文件，并以base64编码进行传输
-        返回值：
-
-​		    code 1 代表通过 0 代表没有通过
-
-        /query/(id)
-        方法：GET
-        无参数，对应id应该和之前的工程号对应
-        返回值：
-            msg 对应信息
-
-            status 对应状态码 
-            
-            status = 1 ，信息为running，程序正在运行
-            status = 2 ，信息为pending，程序排队（对应当前服务器数量少于上传程序的情况）
-            status = 3 ，信息为finished，程序完成
-            status = 0 ，信息为error，程序有错
-
-        /download/(id)
-        方法：GET
-        无参数，对应id应该和之前的工程号对应
-        返回值：
-        code： 1 表示下载成功，0 表示下载失败，表明没有该比特流文件
-        msg: 对应信息
-        data: {
-            file: 若成功则返回下载地址，否则为空
-        }
-
-        job页面可以看到job信息
-
-        如果job结束，没有bit文件就是失败了，详见log
-        编译成功也需要关注log（比如warning）
+		FPGAOL Community Edition: Compiling as a Service
+		In early dev stage
+		</br>
+		<b>Official FPGAOL platform: <a href="https://fpgaol.ustc.edu.cn">https://fpgaol.ustc.edu.cn</a></b>
+		<!--</br>-->
+		Samples and examples: <a href="https://github.com/FPGAOL-CE/user-examples">https://github.com/FPGAOL-CE/user-examples</a>
+		<!--</br>-->
+		See maintainer's other projects: <a href="http://149.28.136.195">http://149.28.136.195</a>
+		<!--</br>-->
         </pre>
-
-
     </div>
 </body>
 

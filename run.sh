@@ -1,2 +1,3 @@
-#!/bin/bash
-python3 server.py
+#!/bin/bash -e
+mkdir -p jobs
+setsid python server.py &
