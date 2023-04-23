@@ -29,13 +29,13 @@ def try_compile(job, callback):
 
 
 class job:
-    def __init__(self, id, sourcecode, device, jobs_dir = JOBS_DIR, simple=0):
+    def __init__(self, id, sourcecode, device, topname='top', jobs_dir = JOBS_DIR, simple=0):
         self.id = id
-        self.webcode = webcode
         self.submit_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         self.start_time = '-'
         self.finish_time = '-'
         self.device = device
+        self.topname = topname
         self.simple = simple
         self.jobs_dir = jobs_dir
         self.succeeded = 0
@@ -86,12 +86,12 @@ class jobManager:
 
     # simple=1: bare single text file and xdc file
     # simple=0: zip file for direct compilation
-    def add_a_job(self, id, sourcecode, device, simple=0):
+    def add_a_job(self, id, sourcecode, device, topname, simple=0):
         if id in self.using_job_id:
             logger.warning('add_a_job: id %s in use!' % id)
             return
         self.using_job_id.add(id)
-        a_new_job = job(id, sourcecode, device, simple=simple)
+        a_new_job = job(id, sourcecode, device, topname, simple=simple)
         self.lock.acquire()
         # remove finished job with same id
         # low efficiency may be

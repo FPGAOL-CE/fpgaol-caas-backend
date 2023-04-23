@@ -8,8 +8,9 @@
 workroot=$1
 simplejob=$2
 device=$3
-xdcfile=$4
-srcfile1=$5
+topname=$4
+xdcfile=$5
+srcfile1=$6
 
 if [[ "$simplejob" != "1" ]]; then
 	echo 'Only simple job is support now!'
@@ -18,12 +19,8 @@ fi
 
 cp fpga_tools/compile.openxc7.sh $workroot/compile.sh
 cp fpga_tools/Makefile.openxc7 $workroot/Makefile
-docker run -it --rm -m 2G \
+docker run -it --rm -m 8G \
 	-v `pwd`/$workroot:/mnt \
 	-v /chipdb:/chipdb \
-	-e TOP=top \
-	-e XDC=/tmp/$xdcfile \
-	-e SOURCES=/tmp/$srcfile1 \
-	-e BUILDDIR=/tmp/build \
 	--tmpfs /tmp \
-	regymm/openxc7 /mnt/compile.sh
+	regymm/openxc7 /mnt/compile.sh $device $topname

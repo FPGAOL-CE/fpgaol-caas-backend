@@ -109,19 +109,21 @@ class InteractiveSubmitHandler(RequestHandler):
         except KeyError:
             inputFpgaPart = 0
 
+        try:
+            inputTopName = bytes.decode(
+                body_arguments['inputTopName'][0], encoding='utf-8')
+        except KeyError:
+            inputTopName = 'top'
+
         XdcFileName = 'top.xdc'
         SrcFileName1 = 'top.v'
 
-        #XdcFileName = bytes.decode(
-            #body_arguments['XdcFileName'][0], encoding='utf-8')
         try:
             inputXdcFile = bytes.decode(
                 body_arguments['inputXdcFile'][0], encoding='utf-8')
         except KeyError:
             inputXdcFile = 0
 
-        # SrcFileName1 = bytes.decode(
-            # body_arguments['SrcFileName1'][0], encoding='utf-8')
         try:
             inputSrcFile1 = bytes.decode(
                 body_arguments['inputSrcFile1'][0], encoding='utf-8')
@@ -152,7 +154,7 @@ class InteractiveSubmitHandler(RequestHandler):
         returncode = 0
         msg = "Unable to submit"
 
-        if id and inputFpgaPart and inputXdcFile and inputSrcFile1:
+        if id and inputFpgaPart and inputTopName and inputXdcFile and inputSrcFile1:
             returncode = 1 
             msg = "Compilation submitted... "
         else:
@@ -160,6 +162,8 @@ class InteractiveSubmitHandler(RequestHandler):
                 msg += ", id invalid"
             if not inputFpgaPart:
                 msg += ", input FPGA Part invalid"
+            if not inputTopName:
+                msg += ", input top module name invalid"
             if not inputXdcFile:
                 msg += ", input constraints(XDC) invalid"
             if not inputSrcFile1:
@@ -167,7 +171,7 @@ class InteractiveSubmitHandler(RequestHandler):
             logger.info("\nJob id %s failed to submit!" % id)
 
         if (returncode == 1):
-            jm.add_a_job(id, sourcecode, inputFpgaPart, simple=1)
+            jm.add_a_job(id, sourcecode, inputFpgaPart, inputTopName, simple=1)
 
         data = {"code": returncode,"msg": msg}
         self.write(data)

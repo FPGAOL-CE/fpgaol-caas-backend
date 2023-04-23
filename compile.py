@@ -32,15 +32,16 @@ openxc7_docker_spawner = 'fpga_tools/openxc7.sh'
             # ' -tclargs ' + work_root + ' ' + device + ' ' + ip_dir)
 
 def compile_new(job):
-    logger.info('\n Start compiling with simple=%s, %s, %s, %s, %s',
-                job.simple, job.jobs_dir, job.id, job.filenames, job.device)
+    logger.info('\n Start compiling with simple=%s, %s, %s, %s, %s, %s',
+                job.simple, job.jobs_dir, job.id, job.filenames, job.device, job.topname)
 
     work_root = os.path.join(job.jobs_dir, str(job.id))
     # command = openxc7_docker_spawner + ' ' + work_root + ' ' + str(job.simple) + ' ' + job.device + ' ' + job.filenames[0] + ' ' + job.filenames[1]
     # print(command)
 
     try:
-        output = check_output([openxc7_docker_spawner, work_root, str(job.simple), job.device, job.filenames[0], job.filenames[1]], stderr=STDOUT, timeout=compiler_timeout)
+        output = check_output([openxc7_docker_spawner, work_root, str(job.simple), job.device, job.topname,
+                               job.filenames[0], job.filenames[1]], stderr=STDOUT, timeout=compiler_timeout)
         print(output)
         return 0
     except CalledProcessError as cpe:
