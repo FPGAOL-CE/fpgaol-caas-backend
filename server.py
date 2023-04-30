@@ -351,14 +351,23 @@ class DownloadHandler(RequestHandler):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Headers", "x-requested-with")
         self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+
+        # if the job's not stale, we download with friendly info in filename
+        running_jobs_temp, pending_jobs_temp, finished_jobs_temp, old_jobids = jm.list_jobs()
+        submit_time = 'unknown'
+        topname = 'unknown'
+        for each in finished_jobs_temp:
+            if id == each[0]:
+                submit_time = each[1]
+                topname = each[7]
         file = ''
         filename = ''
         if (filetype == 'bitstream'):
             file = "./jobs/%s/top.bit" % id
-            filename = 'top-%s.bit' % id
+            filename = '%s-%s-%s.bit' % (id, topname, submit_time)
         elif (filetype == 'log'):
             file = "./jobs/%s/top.log" % id
-            filename = 'top-%s.log' % id
+            filename = '%s-%s-%s.log' % (id, topname, submit_time)
         else:
             self.write("Invalid file type requested!")
             return

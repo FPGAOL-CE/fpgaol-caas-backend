@@ -142,7 +142,7 @@ class jobManager:
 
         for job in self.finished_jobs:
             ret3.append([job.id, job.submit_time,
-                         job.start_time, job.finish_time, job.succeeded, job.timeouted, job.killed])
+                         job.start_time, job.finish_time, job.succeeded, job.timeouted, job.killed, job.topname])
 
         self.lock.release()
         return ret1, ret2, ret3, self.old_jobs
