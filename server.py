@@ -358,7 +358,7 @@ class DownloadHandler(RequestHandler):
         topname = 'unknown'
         for each in finished_jobs_temp:
             if id == each[0]:
-                submit_time = each[1]
+                submit_time = each[1][:-10]
                 topname = each[7]
         file = ''
         filename = ''
