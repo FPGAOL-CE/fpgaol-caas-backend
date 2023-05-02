@@ -98,11 +98,11 @@ class FeedbackHandler(RequestHandler):
         # print(body_arguments.keys())
 
         try:
-            content = bytes.decode(body_arguments['fb_content'][0], encoding='utf-8')
+            content = bytes.decode(body_arguments['fbContent'][0], encoding='utf-8')
         except KeyError:
             content = 'null'
         try:
-            contact = bytes.decode(body_arguments['fb_contact'][0], encoding='utf-8')
+            contact = bytes.decode(body_arguments['fbContact'][0], encoding='utf-8')
         except KeyError:
             contact = 'nobody'
 
