@@ -88,6 +88,31 @@ class StatusHandler(RequestHandler):
         # else:
             # self.write('error')
 
+class FeedbackHandler(RequestHandler):
+    def post(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+
+        body_arguments = self.request.body_arguments
+        # print(body_arguments.keys())
+
+        try:
+            content = bytes.decode(body_arguments['fb_content'][0], encoding='utf-8')
+        except KeyError:
+            content = 'null'
+        try:
+            contact = bytes.decode(body_arguments['fb_contact'][0], encoding='utf-8')
+        except KeyError:
+            contact = 'nobody'
+
+        with open(time.strftime("feedbacks/%Y-%m-%d-%H-%M-%S", time.localtime()), "a") as f:
+            f.write(contact + '\n' + content + '\n')
+
+        data = {"code": 0,"msg": "done"}
+        self.write(data)
+        return
+
 class InteractiveSubmitHandler(RequestHandler):
     def post(self):
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -410,6 +435,7 @@ class DownloadHandler(RequestHandler):
 
 application = tornado.web.Application([
     (r'/submit', InteractiveSubmitHandler),
+    (r'/feedback', FeedbackHandler),
     (r'/jobs', jobsHandler),
     (r'/about', aboutHandler),
     (r'/status/(\w+)',StatusHandler),

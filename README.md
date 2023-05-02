@@ -9,7 +9,9 @@ Or build from scratch according to https://github.com/FPGAOL-CE/osstoolchain-doc
 
 `uuidgen > token` For management panel access http://127.0.0.1:18888/jobs?token=uuid_in_token_file. 
 
-`sudo mkdir /chipdb && sudo chmod 777 /chipdb` Have somewhere to save chipdb(will be generated on first compilation -- and you should temporarily raise docker memory limit(in `fpga_tools/openxc7.sh`) for this!).
+`sudo mkdir /chipdb && sudo chmod 777 /chipdb` Have somewhere to save chipdb(will be generated on first compilation -- and you should temporarily raise docker memory limit(in `fpga_tools/openxc7.sh`) for this!)
+
+`mkdir jobs; mkdir feedbacks` For submitted jobs and feedbacks. 
 
 `python server.py` For some reason, nohup or setsid launch have problems. Tmux is recommended for keeping server alive. 
 
