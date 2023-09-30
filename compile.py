@@ -51,6 +51,37 @@ def compile_new(job):
         print('TimeoutExpired!')
         return -1
 
+def compile_zip(job):
+    logger.info('\n Start compiling with simple=%s, %s, %s',
+                job.jobs_dir, job.id, job.zipname)
+    work_root = os.path.join(job.jobs_dir, str(job.id))
+
+    # Unzip the zipfile
+    try:
+        with zipfile.ZipFile(job.zipfile, 'r') as zip_ref:
+            zip_ref.extractall(work_root)
+    except zipfile.BadZipFile:
+        print('BadZipFile!')
+        return -1
+
+    # Run compilation within the unzipped directory
+    # Just a reminder here: 
+    #  API uploaded jobs:
+    #   run.sh and Makefile are already prepared by caasw before uploading, 
+    #   run.sh runs make in the corresponding Docker container
+    #  Website submitted jobs: 
+    #   TBD
+    try:
+        output = subprocess.check_output(["run.sh"], cwd=work_root, stderr=subprocess.STDOUT, timeout=compiler_timeout)
+        print(output)
+        return 0
+    except subprocess.CalledProcessError as cpe:
+        print('CalledProcessError!')
+        return cpe.returncode
+    except subprocess.TimeoutExpired:
+        print('TimeoutExpired!')
+        return -1
+
     # return os.system(command)
 
     # tcl_build_path = os.path.join(os.getcwd(), vivado_tools_dir, tcl_build)
