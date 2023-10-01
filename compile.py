@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 compiler_timeout = 600
 caasw_exec = "caas-wizard/caasw.py"
 
-# Run the real compilation flow, no matter it's API for Website uplaoded
 def compile(job):
     logger.info('\n Start compiling with simple=%s, %s, %s',
                 job.jobs_dir, job.id, job.filename)
@@ -38,9 +37,11 @@ def compile(job):
     # Just a reminder here: 
     #  API uploaded jobs:
     #   run.sh and Makefile are already prepared by caasw before uploading, 
+    #   But we still run caasw mfgen on server again
     #   run.sh runs make in the corresponding Docker container
     #  Website submitted jobs: 
-    #   TBD
+    #   .caas.conf is uploaded via frontend as well
+    #   mfgen is run for the first time on server
     try:
         output = subprocess.check_output(["run.sh"], cwd=work_root, stderr=subprocess.STDOUT, timeout=compiler_timeout)
         print(output)
