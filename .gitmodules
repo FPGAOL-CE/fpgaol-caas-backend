@@ -1,0 +1,3 @@
+[submodule "caas-wizard"]
+	path = caas-wizard
+	url = https://github.com/FPGAOL-CE/caas-wizard
