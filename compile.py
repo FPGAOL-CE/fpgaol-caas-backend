@@ -9,6 +9,17 @@ logger = logging.getLogger(__name__)
 compiler_timeout = 600
 caasw_exec = "caas-wizard/caasw.py"
 
+def try_compile(job, callback):
+    returnval = -100
+    try:
+        returnval = compile(job)
+    except Exception as e:
+        logger.warning('try_compile: job %s got exception %s!' % (str(job.id), str(e)))
+    job.succeeded = returnval == 0
+    job.timeouted = returnval == -1
+    job.killed = returnval == 233
+    callback(job.id)
+
 def compile(job):
     logger.info('\n Start compiling with simple=%s, %s, %s',
                 job.jobs_dir, job.id, job.filename)

@@ -7,7 +7,7 @@ import shutil
 import time
 import base64
 
-from compile import compile
+from compile import try_compile, compile
 from LogExtract import LogEx
 
 JOBS_DIR = 'jobs'
@@ -15,17 +15,6 @@ JOBS_DIR = 'jobs'
 logging.basicConfig(
     format='%(asctime)s line:%(lineno)s,  %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-def try_compile(job, callback):
-    returnval = -100
-    try:
-        returnval = compile(job)
-    except Exception as e:
-        logger.warning('try_compile: job %s got exception %s!' % (str(job.id), str(e)))
-    job.succeeded = returnval == 0
-    job.timeouted = returnval == -1
-    job.killed = returnval == 233
-    callback(job.id)
 
 class job:
     def __init__(self, id, sourcecode, jobs_dir = JOBS_DIR):

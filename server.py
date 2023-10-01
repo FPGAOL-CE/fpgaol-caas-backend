@@ -10,7 +10,6 @@ from tornado.web import RequestHandler
 from tornado.web import StaticFileHandler
 
 from jobmanager import jobManager
-# from FileExist import FilesEx
 import json
 
 jm = jobManager(8, 64)
