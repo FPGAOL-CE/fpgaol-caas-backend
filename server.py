@@ -19,7 +19,6 @@ logging.basicConfig(
     format='%(asctime)s line:%(lineno)s,  %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class MainHandler(RequestHandler):
     def get(self):
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -41,9 +40,13 @@ class jobsHandler(RequestHandler):
         self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
 
         token = self.get_argument('token', None, True)
-        if token != open("token", "r").read()[:-1]:
-            self.write("<p>Unauthorized Access</p>")
-            return 
+        try:
+            if token != open("token", "r").read()[:-1]:
+                self.write("<p>Unauthorized Access</p>")
+                return 
+        except Exception as e:
+            self.write("<p>Token file not found!</p>")
+            return
 
         running_jobs, pending_jobs, finished_jobs, old_jobids = jm.list_jobs()
         
@@ -128,162 +131,86 @@ class InteractiveSubmitHandler(RequestHandler):
         except KeyError:
             id = 0
 
-        try:
-            inputFpgaPart = bytes.decode(
-                body_arguments['inputFpgaPart'][0], encoding='utf-8')
-        except KeyError:
-            inputFpgaPart = 0
-
-        try:
-            inputTopName = bytes.decode(
-                body_arguments['inputTopName'][0], encoding='utf-8')
-        except KeyError:
-            inputTopName = 'top'
-
         XdcFileName = 'top.xdc'
-        SrcFileName1 = 'top.v'
-
+        SrcFileName = 'top.v'
+        ConfFileName = '.caas.conf'
         try:
             inputXdcFile = bytes.decode(
                 body_arguments['inputXdcFile'][0], encoding='utf-8')
         except KeyError:
             inputXdcFile = 0
-
         try:
-            inputSrcFile1 = bytes.decode(
-                body_arguments['inputSrcFile1'][0], encoding='utf-8')
+            inputSrcFile = bytes.decode(
+                body_arguments['inputSrcFile'][0], encoding='utf-8')
         except KeyError:
-            inputSrcFile1 = 0
+            inputSrcFile = 0
+        try:
+            inputConfFile = bytes.decode(
+                body_arguments['inputConfFile'][0], encoding='utf-8')
+        except KeyError:
+            inputConfFile = 0
 
-  #      SrcFileName2 = bytes.decode(
-  #          body_arguments['SrcFileName2'][0], encoding='utf-8')
-  #      inputFile2 = bytes.decode(
-  #          body_arguments['inputFile2'][0], encoding='utf-8')
-
-        #inputFiles = body_arguments['inputFile1']
-        # SrcFileName = body_arguments['SrcFilname']
-        #print(id, XdcFileName, SrcFileName1, SrcFileName2, inputFPGA)
-        sourcecode = [[XdcFileName, inputXdcFile], [SrcFileName1, inputSrcFile1]]
-
-        # sourcecode = [[inputXdcFile, inputSrcFile1]]
-
-        # if SrcFileName2:
-            # sourcecode.append([SrcFileName2, inputFile2])
-
-        # for i,inputFile in enumerate(inputFiles):
-            # sourcecode.append([str(i)+'.v',bytes.decode(inputFile,encoding='utf-8')])
-
-  #      print(sourcecode)
-        # if  id and inputFPGA and XdcFileName and inputXdcFile and inputFiles:
+        sourcecode = [[XdcFileName, inputXdcFile], [SrcFileName, inputSrcFile], [ConfFileName, inputConfFile]]
 
         returncode = 0
         msg = "Unable to submit"
-
-        if id and inputFpgaPart and inputTopName and inputXdcFile and inputSrcFile1:
+        if id and inputXdcFile and inputSrcFile and inputConfFile:
             returncode = 1 
             msg = "Compilation submitted... "
         else:
             if not id:
                 msg += ", id invalid"
-            if not inputFpgaPart:
-                msg += ", input FPGA Part invalid"
-            if not inputTopName:
-                msg += ", input top module name invalid"
             if not inputXdcFile:
                 msg += ", input constraints(XDC) invalid"
-            if not inputSrcFile1:
+            if not inputSrcFile:
                 msg += ", input Verilog source code invalid"
+            if not inputConfFile:
+                msg += ", input Conf file (frontend-managed) invalid"
             logger.info("\nJob id %s failed to submit!" % id)
 
         if (returncode == 1):
-            jm.add_a_job(id, sourcecode, inputFpgaPart, inputTopName, simple=1)
+            jm.add_a_job(id, sourcecode)
 
         data = {"code": returncode,"msg": msg}
         self.write(data)
         return
-        # self.write(data)
-        # self.write("<h1>Results</h1>")
-        # time.sleep(1)
-        # self.write("<p>11111</p>")
-        # await tornado.ioloop.IOLoop.current().run_in_executor(None, self.do_compiling, (id, sourcecode, inputFpgaPart))
 
-        # self.redirect('/jobs')
+class APISubmitHandler(RequestHandler):
+    def post(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
 
-    # # at this stage, we have all required files and params
-    # def do_compiling(self, id, sourcecode, devicepart):
-        # time.sleep(10)
-        # pass
+        body_arguments = self.request.body_arguments
 
-    # def on_connection_close(self):
-        # pass
+        try:
+            id = bytes.decode(body_arguments['inputJobId'][0], encoding='utf-8')
+            logger.info("\nNew submit: id %s" % id)
+        except KeyError:
+            id = 0
 
-# class OldSubmitHandler(RequestHandler):
-    # def post(self):
-        # self.set_header("Access-Control-Allow-Origin", "*")
-        # self.set_header("Access-Control-Allow-Headers", "x-requested-with")
-        # self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-        # code = 0
-        # msg = "提交编译失败"
-        # body_arguments = self.request.body_arguments
-        # # print(body_arguments.keys())
-        # id = bytes.decode(body_arguments['inputJobId'][0], encoding='utf-8')
-        # logger.info("\nCompilingPrjid%s"%id)
-        # inputFPGA = bytes.decode(
-            # body_arguments['inputFPGA'][0], encoding='utf-8')
-        # #XdcFileName = bytes.decode(
-            # #body_arguments['XdcFileName'][0], encoding='utf-8')
-        # #inputXdcFile = bytes.decode(
-            # #body_arguments['inputXdcFile'][0], encoding='utf-8')
-        # ZipFileName = 'UserZip.zip'
-        # XdcFileName = 'top.xdc'
-        # SrcFileName1 = 'top.v'
-        
-        # inputZipFile = self.request.files['inputZipFile'][0].get('body')
-  # #      SrcFileName1 = bytes.decode(
-  # #          body_arguments['SrcFileName1'][0], encoding='utf-8')
-  # #      inputFile1 = bytes.decode(
-  # #          body_arguments['inputFile1'][0], encoding='utf-8')
-  # #      SrcFileName2 = bytes.decode(
-  # #          body_arguments['SrcFileName2'][0], encoding='utf-8')
-  # #      inputFile2 = bytes.decode(
-  # #          body_arguments['inputFile2'][0], encoding='utf-8')
+        ZipFileName = 'job.zip'
+        try:
+            inputZipFile = bytes.decode(
+                body_arguments['inputZipFile'][0], encoding='utf-8')
+        except KeyError:
+            inputZipFile = 0
 
-        # #inputFiles = body_arguments['inputFile1']
-        # # SrcFileName = body_arguments['SrcFilname']
-        # #print(id, XdcFileName, SrcFileName1, SrcFileName2, inputFPGA)
+        sourcecode = [[ZipFileName, inputZipFile]]
 
-        # # Our convention now: XDC file MUST be the first
-        # sourcecode = [[XdcFileName, inputXdcFile], [SrcFileName1, inputSrcFile1]]
+        returncode = 0
+        msg = "Unable to submit"
 
-        # # sourcecode = [[ZipFileName, inputZipFile]]
+        if id and inputZipFile:
+            returncode = 1 
+            msg = "Compilation submitted... "
 
-        # # for i,inputFile in enumerate(inputFiles):
-            # # sourcecode.append([str(i)+'.v',bytes.decode(inputFile,encoding='utf-8')])
+        if (returncode == 1):
+            jm.add_a_job(id, sourcecode)
 
-  # #      print(sourcecode)
-        # # if  id and inputFPGA and XdcFileName and inputXdcFile and inputFiles:
-        # if  id and inputFPGA and inputZipFile:
-            # code = 1 
-            # msg = "提交编译成功，请使用查询接口查询编译状态"
-        # else:
-            # if not id:
-                # msg += ",the id is not correct"
-            # if not inputFPGA:
-                # msg += ",the inputFPGA is not correct"
-            # if not inputZipFile:
-                # msg += ",the inputZipFile is not correct"
-            # data = {"code": code,"msg": msg}
-            # self.write(data)
-            # logger.info("\nCompilingPrjid%sFinish"%id)
-            # return 
-
-        # # if SrcFileName2:
-            # # sourcecode.append([SrcFileName2, inputFile2])
-        # data = {"code": code,"msg": msg}
-        # self.write(data)
-
-        # jm.add_a_job(id, sourcecode, inputFPGA)
-        # # self.redirect('/jobs')
+        data = {"code": returncode,"msg": msg}
+        self.write(data)
+        return
 
 
 # class QueryHandler(RequestHandler):
@@ -409,32 +336,13 @@ class DownloadHandler(RequestHandler):
                 if not data:
                     break
                 self.write(data)
-                # flush method call is import,it makes low memory occupy,beacuse it send it out timely
+                # flush method call is import, it makes low memory occupy,
+                # beacuse it send it out timely
                 self.flush()
-
-    # def get(self,id):
-        # self.set_header("Access-Control-Allow-Origin", "*")
-        # self.set_header("Access-Control-Allow-Headers", "x-requested-with")
-        # self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-        # self.set_header('Content-Type', 'application/octet-stream')
-        # self.set_header('Content-Disposition', 'attachment; filename=top.bit')
-        # # code = 1
-        # # msg = "下载成功"
-        # bitfile = "./jobs/%s/top.bit" % id
-        # file_exist = os.path.exists(bitfile)
-        # # File_list = FilesEx(id)
-        # if file_exist:
-            # self.write(open(bitfile, 'rb').read())
-            # # data = {"code": code,"msg": msg,"data":File_list}
-            # # self.write(data)
-        # # else:
-            # # code = 0
-            # # msg = "下载失败，没有相应比特流文件"
-            # # data = {"code": code,"msg": msg,"data":File_list}
-            # # self.write(data)
 
 application = tornado.web.Application([
     (r'/submit', InteractiveSubmitHandler),
+    (r'/zsubmit', APISubmitHandler),
     (r'/feedback', FeedbackHandler),
     (r'/jobs', jobsHandler),
     (r'/about', aboutHandler),
@@ -453,3 +361,4 @@ if __name__ == '__main__':
 
     logger.info('Server started')
     tornado.ioloop.IOLoop.current().start()
+

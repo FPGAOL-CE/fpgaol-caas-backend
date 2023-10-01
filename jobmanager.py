@@ -7,7 +7,7 @@ import shutil
 import time
 import base64
 
-from compile import compile_new
+from compile import compile
 from LogExtract import LogEx
 
 JOBS_DIR = 'jobs'
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 def try_compile(job, callback):
     returnval = -100
     try:
-        returnval = compile_new(job)
+        returnval = compile(job)
     except Exception as e:
         logger.warning('try_compile: job %s got exception %s!' % (str(job.id), str(e)))
     job.succeeded = returnval == 0
@@ -27,21 +27,16 @@ def try_compile(job, callback):
     job.killed = returnval == 233
     callback(job.id)
 
-
 class job:
-    def __init__(self, id, sourcecode, device, topname='top', jobs_dir = JOBS_DIR, simple=0):
+    def __init__(self, id, sourcecode, jobs_dir = JOBS_DIR):
         self.id = id
         self.submit_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         self.start_time = '-'
         self.finish_time = '-'
-        self.device = device
-        self.topname = topname
-        self.simple = simple
         self.jobs_dir = jobs_dir
         self.succeeded = 0
         self.timeouted = 0
         self.killed = 0
-        # self._create(id, sourcecode)
 
         try:
             if os.path.exists(os.path.join(self.jobs_dir, id)):
@@ -54,44 +49,35 @@ class job:
 
         for filename, code in sourcecode:
             try:
-                f = open(os.path.join(self.jobs_dir, id, filename), 'w')
-                # ZIP file remains as is, and then unzipped by compiling functions
-                # ZipFileName = 'UserZip.zip'
-                # if filename == ZipFileName:
-                    # #b64_content = base64.urlsafe_b64decode(code)
-                    # f.write(code)
-                # else:
+                f = open(os.path.join(self.jobs_dir, id, filename), 
+                         'wb' if '.zip' in filename else 'w')
                 f.write(code)
                 f.close()
                 self.filenames.append(filename)
             except Exception as e:
                 logger.warning(
                     'writing sourcecode file (%s) error, value:' % filename, e)
-    # def _create(self, id, sourcecode):
-
 
 class jobManager:
-
     def __init__(self, running_job_max, pending_jobs_max):
         self.running_job_max = running_job_max
         self.running_jobs = dict()
         self.pending_job_max = pending_jobs_max
         self.pending_jobs = queue.Queue(pending_jobs_max)
         self.using_job_id = set()
-        # this is kinda strange...
         self.finished_jobs = []
+        if not os.path.exists(JOBS_DIR):
+           os.makedirs(JOBS_DIR)
+        # this is kinda strange...
         self.old_jobs = os.listdir(JOBS_DIR)
-
         self.lock = threading.Lock()
 
-    # simple=1: bare single text file and xdc file
-    # simple=0: zip file for direct compilation
-    def add_a_job(self, id, sourcecode, device, topname, simple=0):
+    def add_a_job(self, id, sourcecode):
         if id in self.using_job_id:
             logger.warning('add_a_job: id %s in use!' % id)
             return
         self.using_job_id.add(id)
-        a_new_job = job(id, sourcecode, device, topname, simple=simple)
+        a_new_job = job(id, sourcecode)
         self.lock.acquire()
         # remove finished job with same id
         # low efficiency may be
@@ -142,7 +128,7 @@ class jobManager:
 
         for job in self.finished_jobs:
             ret3.append([job.id, job.submit_time,
-                         job.start_time, job.finish_time, job.succeeded, job.timeouted, job.killed, job.topname])
+                         job.start_time, job.finish_time, job.succeeded, job.timeouted, job.killed, 'top'])
 
         self.lock.release()
         return ret1, ret2, ret3, self.old_jobs

@@ -1,67 +1,37 @@
 import os
-# from edalize import get_edatool
 import time
-from subprocess import STDOUT, check_output, CalledProcessError, TimeoutExpired
-
+import subprocess
 import logging
 logging.basicConfig(
     format='%(asctime)s line:%(lineno)s,  %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 compiler_timeout = 600
-f4pga_docker_spawner = 'fpga_tools/f4pga.sh'
-openxc7_docker_spawner = 'fpga_tools/openxc7.sh'
+caasw_exec = "caas-wizard/caasw.py"
 
-#vivado_exec = '/opt/Xilinx/Vivado/2020.2/bin/vivado'
-# vivado_exec = '/tools/Xilinx/Vivado/2019.2/bin/vivado'
-# vivado_tools_dir = 'vivado_tools'
-# vivado_ip_dir = 'vivado_tools/ip'
-# tcl_build = 'build.tcl'
-# vivado_mode = 'tcl'
-# vivado_mode = 'batch'
-
-
-# def compile(jobdir, id, filenames, device):
-    # print(jobdir, id, filenames, device)
-    # tcl_build_path = os.path.join(os.getcwd(), vivado_tools_dir, tcl_build)
-    # ip_dir = os.path.join(os.getcwd(), vivado_ip_dir)
-    # work_root = os.path.join(jobdir, id)
-    # os.system('unzip -o ' + work_root + '/' + filenames[0] + ' -d ' + work_root)
-
-    # os.system(vivado_exec + ' -mode ' + vivado_mode + ' -source ' + tcl_build_path + 
-            # ' -tclargs ' + work_root + ' ' + device + ' ' + ip_dir)
-
-def compile_new(job):
-    logger.info('\n Start compiling with simple=%s, %s, %s, %s, %s, %s',
-                job.simple, job.jobs_dir, job.id, job.filenames, job.device, job.topname)
-
-    work_root = os.path.join(job.jobs_dir, str(job.id))
-    # command = openxc7_docker_spawner + ' ' + work_root + ' ' + str(job.simple) + ' ' + job.device + ' ' + job.filenames[0] + ' ' + job.filenames[1]
-    # print(command)
-
-    try:
-        output = check_output([openxc7_docker_spawner, work_root, str(job.simple), job.device, job.topname,
-                               job.filenames[0], job.filenames[1]], stderr=STDOUT, timeout=compiler_timeout)
-        print(output)
-        return 0
-    except CalledProcessError as cpe:
-        print('CallProcessError!')
-        return cpe.returncode
-    except TimeoutExpired:
-        print('TimeoutExpired!')
-        return -1
-
-def compile_zip(job):
+# Run the real compilation flow, no matter it's API for Website uplaoded
+def compile(job):
     logger.info('\n Start compiling with simple=%s, %s, %s',
-                job.jobs_dir, job.id, job.zipname)
+                job.jobs_dir, job.id, job.filename)
     work_root = os.path.join(job.jobs_dir, str(job.id))
 
-    # Unzip the zipfile
-    try:
-        with zipfile.ZipFile(job.zipfile, 'r') as zip_ref:
-            zip_ref.extractall(work_root)
-    except zipfile.BadZipFile:
-        print('BadZipFile!')
+    # Unzip the zipfile if there is one
+    # Otherwise, it's website uploaded with .caas.conf in the file list
+    hasZip = 0
+    for z in job.filename:
+        if '.zip' in z:
+            try:
+                with zipfile.ZipFile(z, 'r') as zip_ref:
+                    zip_ref.extractall(work_root)
+                hasZip = 1
+            except zipfile.BadZipFile:
+                print('BadZipFile!')
+                return -1
+
+    # Run caasw for Makefile gen: we don't trust user input
+    ret = subprocess.call([caasw_exec, "mfgen", ".caas.conf", ".", "--overwrite"], cwd=work_root)
+    if ret != 0:
+        print('Error generating Makefile from project!')
         return -1
 
     # Run compilation within the unzipped directory
@@ -81,12 +51,3 @@ def compile_zip(job):
     except subprocess.TimeoutExpired:
         print('TimeoutExpired!')
         return -1
-
-    # return os.system(command)
-
-    # tcl_build_path = os.path.join(os.getcwd(), vivado_tools_dir, tcl_build)
-    # ip_dir = os.path.join(os.getcwd(), vivado_ip_dir)
-    # os.system('unzip -o ' + work_root + '/' + filenames[0] + ' -d ' + work_root)
-
-    # os.system(vivado_exec + ' -mode ' + vivado_mode + ' -source ' + tcl_build_path + 
-            # ' -tclargs ' + work_root + ' ' + device + ' ' + ip_dir)
