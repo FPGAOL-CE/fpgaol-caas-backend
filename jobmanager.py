@@ -38,10 +38,16 @@ class job:
 
         for filename, code in sourcecode:
             try:
-                f = open(os.path.join(self.jobs_dir, id, filename), 
-                         'wb' if '.zip' in filename else 'w')
-                f.write(code)
-                f.close()
+                if '.zip' in filename:
+                    f = open(os.path.join(self.jobs_dir, id, filename), 
+                             'wb' if '.zip' in filename else 'w')
+                    f.write(code[0].body)
+                    f.close()
+                else:
+                    f = open(os.path.join(self.jobs_dir, id, filename), 
+                             'wb' if '.zip' in filename else 'w')
+                    f.write(code)
+                    f.close()
                 self.filenames.append(filename)
             except Exception as e:
                 logger.warning(

@@ -2,6 +2,7 @@ import os
 import time
 import subprocess
 import logging
+import zipfile
 logging.basicConfig(
     format='%(asctime)s line:%(lineno)s,  %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ def compile(job):
     for z in job.filenames:
         if '.zip' in z:
             try:
-                with zipfile.ZipFile(z, 'r') as zip_ref:
+                with zipfile.ZipFile(os.path.join(work_root, z), 'r') as zip_ref:
                     zip_ref.extractall(work_root)
                 hasZip = 1
             except zipfile.BadZipFile:
@@ -55,7 +56,7 @@ def compile(job):
     #   mfgen is run for the first time on server
     try:
         output = subprocess.check_output([os.path.join(os.getcwd(), job.jobs_dir, job.id, "run.sh")], cwd=work_root, stderr=subprocess.STDOUT, timeout=compiler_timeout)
-        print(output)
+        print(output.decode('utf-8'))
         return 0
     except subprocess.CalledProcessError as cpe:
         print('CalledProcessError!')

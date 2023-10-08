@@ -115,7 +115,7 @@ class FeedbackHandler(RequestHandler):
         self.write(data)
         return
 
-class InteractiveSubmitHandler(RequestHandler):
+class SubmitHandler(RequestHandler):
     def post(self):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Headers", "x-requested-with")
@@ -128,7 +128,16 @@ class InteractiveSubmitHandler(RequestHandler):
             id = bytes.decode(body_arguments['inputJobId'][0], encoding='utf-8')
             logger.info("\nNew submit: id %s" % id)
         except KeyError:
-            id = 0
+            id = None 
+
+        jobfiles = []
+
+        ZipFileName = 'job.zip'
+        try:
+            inputZipFile = self.request.files.get('inputZipFile')
+            jobfiles.append([ZipFileName, inputZipFile])
+        except AttributeError:
+            inputZipFile = None
 
         XdcFileName = 'top.xdc'
         SrcFileName = 'top.v'
@@ -136,27 +145,32 @@ class InteractiveSubmitHandler(RequestHandler):
         try:
             inputXdcFile = bytes.decode(
                 body_arguments['inputXdcFile'][0], encoding='utf-8')
+            jobfiles.append([XdcFileName, inputXdcFile])
         except KeyError:
-            inputXdcFile = 0
+            inputXdcFile = None
         try:
             inputSrcFile = bytes.decode(
                 body_arguments['inputSrcFile'][0], encoding='utf-8')
+            jobfiles.append([SrcFileName, inputSrcFile])
         except KeyError:
-            inputSrcFile = 0
+            inputSrcFile = None
         try:
             inputConfFile = bytes.decode(
                 body_arguments['inputConfFile'][0], encoding='utf-8')
+            jobfiles.append([ConfFileName, inputConfFile])
         except KeyError:
-            inputConfFile = 0
+            inputConfFile = None
 
-        sourcecode = [[XdcFileName, inputXdcFile], [SrcFileName, inputSrcFile], [ConfFileName, inputConfFile]]
-
-        returncode = 0
+        success = 0
         msg = "Unable to submit"
-        if id and inputXdcFile and inputSrcFile and inputConfFile:
-            returncode = 1 
-            msg = "Compilation submitted... "
+        if id and inputZipFile:
+            success = 1
+            msg = "Request is ZIP. Compilation submitted... "
+        elif id and inputXdcFile and inputSrcFile and inputConfFile:
+            success = 1 
+            msg = "Request is Source. Compilation submitted... "
         else:
+            msg = "Neither ZIP or Source compilation can be satisfied"
             if not id:
                 msg += ", id invalid"
             if not inputXdcFile:
@@ -165,52 +179,16 @@ class InteractiveSubmitHandler(RequestHandler):
                 msg += ", input Verilog source code invalid"
             if not inputConfFile:
                 msg += ", input Conf file (frontend-managed) invalid"
+            if not inputZipFile:
+                msg += ", input ZIP file (caasw submission) invalid"
             logger.info("\nJob id %s failed to submit!" % id)
 
-        if (returncode == 1):
-            jm.add_a_job(id, sourcecode)
+        if (success == 1):
+            jm.add_a_job(id, jobfiles)
 
-        data = {"code": returncode,"msg": msg}
+        data = {"code": success,"msg": msg}
         self.write(data)
         return
-
-class APISubmitHandler(RequestHandler):
-    def post(self):
-        self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
-        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-
-        body_arguments = self.request.body_arguments
-
-        try:
-            id = bytes.decode(body_arguments['inputJobId'][0], encoding='utf-8')
-            logger.info("\nNew submit: id %s" % id)
-        except KeyError:
-            id = 0
-
-        ZipFileName = 'job.zip'
-        try:
-            inputZipFile = bytes.decode(
-                body_arguments['inputZipFile'][0], encoding='utf-8')
-        except KeyError:
-            inputZipFile = 0
-
-        sourcecode = [[ZipFileName, inputZipFile]]
-
-        returncode = 0
-        msg = "Unable to submit"
-
-        if id and inputZipFile:
-            returncode = 1 
-            msg = "Compilation submitted... "
-
-        if (returncode == 1):
-            jm.add_a_job(id, sourcecode)
-
-        data = {"code": returncode,"msg": msg}
-        self.write(data)
-        return
-
 
 # class QueryHandler(RequestHandler):
     # def get(self,id):
@@ -340,8 +318,7 @@ class DownloadHandler(RequestHandler):
                 self.flush()
 
 application = tornado.web.Application([
-    (r'/submit', InteractiveSubmitHandler),
-    (r'/zsubmit', APISubmitHandler),
+    (r'/submit', SubmitHandler),
     (r'/feedback', FeedbackHandler),
     (r'/jobs', jobsHandler),
     (r'/about', aboutHandler),
