@@ -7,7 +7,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 compiler_timeout = 600
-caasw_exec = "caas-wizard/caasw.py"
+caasw_exec = os.path.join(os.getcwd(), "caas-wizard/caasw.py")
 
 def try_compile(job, callback):
     returnval = -100
@@ -22,13 +22,13 @@ def try_compile(job, callback):
 
 def compile(job):
     logger.info('\n Start compiling with simple=%s, %s, %s',
-                job.jobs_dir, job.id, job.filename)
+                job.jobs_dir, job.id, job.filenames)
     work_root = os.path.join(job.jobs_dir, str(job.id))
 
     # Unzip the zipfile if there is one
     # Otherwise, it's website uploaded with .caas.conf in the file list
     hasZip = 0
-    for z in job.filename:
+    for z in job.filenames:
         if '.zip' in z:
             try:
                 with zipfile.ZipFile(z, 'r') as zip_ref:
@@ -54,7 +54,7 @@ def compile(job):
     #   .caas.conf is uploaded via frontend as well
     #   mfgen is run for the first time on server
     try:
-        output = subprocess.check_output(["run.sh"], cwd=work_root, stderr=subprocess.STDOUT, timeout=compiler_timeout)
+        output = subprocess.check_output([os.path.join(os.getcwd(), job.jobs_dir, job.id, "run.sh")], cwd=work_root, stderr=subprocess.STDOUT, timeout=compiler_timeout)
         print(output)
         return 0
     except subprocess.CalledProcessError as cpe:

@@ -314,10 +314,10 @@ class DownloadHandler(RequestHandler):
         file = ''
         filename = ''
         if (filetype == 'bitstream'):
-            file = "./jobs/%s/top.bit" % id
+            file = "./jobs/%s/build/top.bit" % id
             filename = '%s-%s-%s.bit' % (id, topname, submit_time)
         elif (filetype == 'log'):
-            file = "./jobs/%s/top.log" % id
+            file = "./jobs/%s/build/top.log" % id
             filename = '%s-%s-%s.log' % (id, topname, submit_time)
         else:
             self.write("Invalid file type requested!")
