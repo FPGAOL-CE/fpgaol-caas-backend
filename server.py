@@ -133,11 +133,9 @@ class SubmitHandler(RequestHandler):
         jobfiles = []
 
         ZipFileName = 'job.zip'
-        try:
-            inputZipFile = self.request.files.get('inputZipFile')
+        inputZipFile = self.request.files.get('inputZipFile')
+        if inputZipFile:
             jobfiles.append([ZipFileName, inputZipFile])
-        except AttributeError:
-            inputZipFile = None
 
         XdcFileName = 'top.xdc'
         SrcFileName = 'top.v'

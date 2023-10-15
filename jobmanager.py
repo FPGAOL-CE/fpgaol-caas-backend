@@ -10,7 +10,7 @@ import base64
 from compile import try_compile, compile
 from LogExtract import LogEx
 
-JOBS_DIR = 'jobs'
+JOBS_DIR = '/jobs'
 
 logging.basicConfig(
     format='%(asctime)s line:%(lineno)s,  %(message)s', level=logging.INFO)

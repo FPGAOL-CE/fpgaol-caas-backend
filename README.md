@@ -2,17 +2,35 @@
 
 #### How to run this project
 
-`docker pull regymm/symbiflow`
-Or build from scratch according to https://github.com/FPGAOL-CE/osstoolchain-docker-things . The image is around 20 GB. 
+On host machine, pull the server and desired backends: 
+
+`docker pull regymm/openxc7`
+
+`docker pull regymm/vivado-lite`
+
+`docker pull regymm/fpgaol-caas-backend`
+
+Backend descriptions are at https://github.com/FPGAOL-CE/osstoolchain-docker-things .
+
+Prepare working directories: 
+
+```
+sudo mkdir /chipdb && sudo chmod 777 /chipdb
+sudo mkdir /jobs && sudo chmod 777 /jobs
+```
+
+Run the server in Docker: 
+
+`docker run -it --rm -p 18888:18888 -v /var/run/docker.sock:/var/run/docker.sock -v /chipdb:/chipdb -v /jobs:/jobs regymm/fpgaol-caas-backend`
+
+Server will be at localhost:18888. For frontend, please check https://github.com/FPGAOL-CE/fpgaol-caas-frontend . 
+
+
+
+--- Deprecated ---
 
 `pip install tornado aiofiles`
 
 `uuidgen > token` For management panel access http://127.0.0.1:18888/jobs?token=uuid_in_token_file. 
-
-`sudo mkdir /chipdb && sudo chmod 777 /chipdb` Have somewhere to save chipdb(will be generated on first compilation -- and you should temporarily raise docker memory limit(in `fpga_tools/openxc7.sh`) for this!)
-
-`mkdir jobs; mkdir feedbacks` For submitted jobs and feedbacks. 
-
-`python server.py` For some reason, nohup or setsid launch have problems. Tmux is recommended for keeping server alive. 
 
 Then check at http://127.0.0.1:18888. To serve frontend and backend together, you can overwrite the `page/` files using the built frontend(`dist/` from `fpgaol-caas-frontend`). 
