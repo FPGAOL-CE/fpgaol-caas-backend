@@ -10,6 +10,7 @@ from tornado.web import RequestHandler
 from tornado.web import StaticFileHandler
 
 from jobmanager import jobManager
+from jobmanager import JOBS_DIR
 import json
 
 jm = jobManager(8, 64)
@@ -290,10 +291,10 @@ class DownloadHandler(RequestHandler):
         file = ''
         filename = ''
         if (filetype == 'bitstream'):
-            file = "./jobs/%s/build/top.bit" % id
+            file = os.path.join(JOBS_DIR, "%s/build/top.bit" % id)
             filename = '%s-%s-%s.bit' % (id, topname, submit_time)
         elif (filetype == 'log'):
-            file = "./jobs/%s/build/top.log" % id
+            file = os.path.join(JOBS_DIR, "%s/build/top.log" % id)
             filename = '%s-%s-%s.log' % (id, topname, submit_time)
         else:
             self.write("Invalid file type requested!")
