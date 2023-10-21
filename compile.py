@@ -48,14 +48,14 @@ def compile(job):
     # Run compilation within the unzipped directory
     # Just a reminder here: 
     #  API uploaded jobs:
-    #   run.sh and Makefile are already prepared by caasw before uploading, 
+    #   run_caas.sh and Makefile are already prepared by caasw before uploading, 
     #   But we still run caasw mfgen on server again
-    #   run.sh runs make in the corresponding Docker container
+    #   run_caas.sh runs make in the corresponding Docker container
     #  Website submitted jobs: 
     #   .caas.conf is uploaded via frontend as well
     #   mfgen is run for the first time on server
     try:
-        output = subprocess.check_output([os.path.join(os.getcwd(), job.jobs_dir, job.id, "run.sh")], cwd=work_root, stderr=subprocess.STDOUT, timeout=compiler_timeout)
+        output = subprocess.check_output([os.path.join(os.getcwd(), job.jobs_dir, job.id, "run_caas.sh")], cwd=work_root, stderr=subprocess.STDOUT, timeout=compiler_timeout)
         print(output.decode('utf-8'))
         return 0
     except subprocess.CalledProcessError as cpe:
