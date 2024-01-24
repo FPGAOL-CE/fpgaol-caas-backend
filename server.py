@@ -288,11 +288,14 @@ class DownloadHandler(RequestHandler):
             if id == each[0]:
                 submit_time = each[1][:-9]
                 topname = each[7]
-        file = ''
-        filename = ''
+        file = 'file-not-found'
+        filename = 'invalid-file-name'
         if (filetype == 'bitstream'):
-            file = os.path.join(JOBS_DIR, "%s/build/top.bit" % id)
-            filename = '%s-%s-%s.bit' % (id, topname, submit_time)
+            for ext in ['bit', 'fs']:
+                file = os.path.join(JOBS_DIR, '%s/build/top.' % id + ext)
+                filename = '%s-%s-%s.bit' % (id, topname, submit_time)
+                if os.path.exists(file):
+                    break
         elif (filetype == 'log'):
             file = os.path.join(JOBS_DIR, "%s/build/top.log" % id)
             filename = '%s-%s-%s.log' % (id, topname, submit_time)

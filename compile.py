@@ -22,7 +22,7 @@ def try_compile(job, callback):
     callback(job.id)
 
 def compile(job):
-    logger.info('\n Start compiling with simple=%s, %s, %s',
+    logger.info('\n Start compiling with %s, %s, %s',
                 job.jobs_dir, job.id, job.filenames)
     work_root = os.path.join(job.jobs_dir, str(job.id))
 
