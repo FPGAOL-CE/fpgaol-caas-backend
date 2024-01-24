@@ -292,8 +292,8 @@ class DownloadHandler(RequestHandler):
         filename = 'invalid-file-name'
         if (filetype == 'bitstream'):
             for ext in ['bit', 'fs']:
-                file = os.path.join(JOBS_DIR, '%s/build/top.' % id + ext)
-                filename = '%s-%s-%s.bit' % (id, topname, submit_time)
+                file = os.path.join(JOBS_DIR, '%s/build/top.%s' % (id, ext))
+                filename = '%s-%s-%s.%s' % (id, topname, submit_time, ext)
                 if os.path.exists(file):
                     break
         elif (filetype == 'log'):
