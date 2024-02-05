@@ -40,7 +40,7 @@ def compile(job):
                 return -1
 
     # Run caasw for Makefile gen: we don't trust user input
-    ret = subprocess.call([caasw_exec, "mfgen", ".caas.conf", ".", "--overwrite"], cwd=work_root)
+    ret = subprocess.call([caasw_exec, "mfgen", ".caas.conf", ".", "--overwrite", "--clone"], cwd=work_root)
     if ret != 0:
         print('Error generating Makefile from project!')
         return -1
