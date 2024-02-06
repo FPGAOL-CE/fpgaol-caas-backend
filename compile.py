@@ -7,7 +7,7 @@ logging.basicConfig(
     format='%(asctime)s line:%(lineno)s,  %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-compiler_timeout = 600
+compiler_timeout = 240
 caasw_exec = os.path.join(os.getcwd(), "caas-wizard/caasw.py")
 
 def try_compile(job, callback):
@@ -25,6 +25,7 @@ def compile(job):
     logger.info('\n Start compiling with %s, %s, %s',
                 job.jobs_dir, job.id, job.filenames)
     work_root = os.path.join(job.jobs_dir, str(job.id))
+    os.mkdir(os.path.join(work_root, 'build'))
 
     # Unzip the zipfile if there is one
     # Otherwise, it's website uploaded with .caas.conf in the file list
@@ -39,7 +40,9 @@ def compile(job):
                 print('BadZipFile!')
                 return -1
 
-    # Run caasw for Makefile gen: we don't trust user input
+    # Run caasw for Makefile gen: we don't let user upload Makefile
+    # Redirect output to build/top.log, so even if this fails (especially with Giturl),
+    # user still get a log to read
     ret = subprocess.call([caasw_exec, "mfgen", ".caas.conf", ".", "--overwrite", "--clone"], cwd=work_root)
     if ret != 0:
         print('Error generating Makefile from project!')
@@ -55,7 +58,8 @@ def compile(job):
     #   .caas.conf is uploaded via frontend as well
     #   mfgen is run for the first time on server
     try:
-        output = subprocess.check_output([os.path.join(os.getcwd(), job.jobs_dir, job.id, "run_caas.sh")], cwd=work_root, stderr=subprocess.STDOUT, timeout=compiler_timeout)
+        with open (os.path.join(work_root, "build/top.log"), "w") as logf:
+            subprocess.run([os.path.join(os.getcwd(), job.jobs_dir, job.id, "run_caas.sh")], cwd=work_root, stdout = logf, stderr=logf, timeout=compiler_timeout)
         print(output.decode('utf-8'))
         return 0
     except subprocess.CalledProcessError as cpe:
