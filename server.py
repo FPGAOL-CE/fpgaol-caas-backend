@@ -160,6 +160,15 @@ class SubmitHandler(RequestHandler):
         except KeyError:
             inputConfFile = None
 
+        try:
+            inputNoSource = bytes.decode(
+                body_arguments['inputNoSource'][0], encoding='utf-8')
+            print('---' + inputNoSource)
+            if inputNoSource != '1':
+                inputNoSource = None
+        except KeyError:
+            inputNoSource = None
+
         success = 0
         msg = "Unable to submit"
         if id and inputZipFile:
@@ -167,7 +176,10 @@ class SubmitHandler(RequestHandler):
             msg = "Request is ZIP. Compilation submitted... "
         elif id and inputXdcFile and inputSrcFile and inputConfFile:
             success = 1 
-            msg = "Request is Source. Compilation submitted... "
+            msg = "Request is Source + Conf. Compilation submitted... "
+        elif id and inputNoSource and inputConfFile:
+            success = 1 
+            msg = "Request is Conf without Source. Compilation submitted... "
         else:
             msg = "Neither ZIP or Source compilation can be satisfied"
             if not id:

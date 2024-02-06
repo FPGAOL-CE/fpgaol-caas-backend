@@ -60,8 +60,8 @@ def compile(job):
     #   .caas.conf is uploaded via frontend as well
     #   mfgen is run for the first time on server
     try:
-        subprocess.run([os.path.join(os.getcwd(), job.jobs_dir, job.id, "run_caas.sh")], cwd=work_root, timeout=compiler_timeout)
-        return 0
+        ret = subprocess.run([os.path.join(os.getcwd(), job.jobs_dir, job.id, "run_caas.sh")], cwd=work_root, timeout=compiler_timeout)
+        return ret.returncode
     except subprocess.CalledProcessError as cpe:
         print('CalledProcessError!')
         return cpe.returncode
