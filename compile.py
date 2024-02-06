@@ -43,7 +43,9 @@ def compile(job):
     # Run caasw for Makefile gen: we don't let user upload Makefile
     # Redirect output to build/top.log, so even if this fails (especially with Giturl),
     # user still get a log to read
-    ret = subprocess.call([caasw_exec, "mfgen", ".caas.conf", ".", "--overwrite", "--clone"], cwd=work_root)
+    ret = -1
+    with open(os.path.join(work_root, "build", "top.log"), "w") as logf:
+        ret = subprocess.call([caasw_exec, "mfgen", ".caas.conf", ".", "--overwrite", "--clone"], cwd=work_root, stdout=logf, stderr=logf)
     if ret != 0:
         print('Error generating Makefile from project!')
         return -1
@@ -58,8 +60,7 @@ def compile(job):
     #   .caas.conf is uploaded via frontend as well
     #   mfgen is run for the first time on server
     try:
-        with open (os.path.join(work_root, "build/top.log"), "w") as logf:
-            subprocess.run([os.path.join(os.getcwd(), job.jobs_dir, job.id, "run_caas.sh")], cwd=work_root, stdout = logf, stderr=logf, timeout=compiler_timeout)
+        subprocess.run([os.path.join(os.getcwd(), job.jobs_dir, job.id, "run_caas.sh")], cwd=work_root, timeout=compiler_timeout)
         return 0
     except subprocess.CalledProcessError as cpe:
         print('CalledProcessError!')
