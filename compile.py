@@ -60,7 +60,6 @@ def compile(job):
     try:
         with open (os.path.join(work_root, "build/top.log"), "w") as logf:
             subprocess.run([os.path.join(os.getcwd(), job.jobs_dir, job.id, "run_caas.sh")], cwd=work_root, stdout = logf, stderr=logf, timeout=compiler_timeout)
-        print(output.decode('utf-8'))
         return 0
     except subprocess.CalledProcessError as cpe:
         print('CalledProcessError!')
