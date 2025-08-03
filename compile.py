@@ -45,7 +45,9 @@ def compile(job):
     # user still get a log to read
     ret = -1
     with open(os.path.join(work_root, "build", "top.log"), "w") as logf:
-        ret = subprocess.call([caasw_exec, "mfgen", ".caas.conf", ".", "--overwrite", "--clone"], cwd=work_root, stdout=logf, stderr=logf)
+        ret = subprocess.call([caasw_exec, "mfgen", ".caas.conf", ".", "--overwrite", "--clone",
+                               "--compile" if job.tasktype == 'compile' else "--sim"],
+                               cwd=work_root, stdout=logf, stderr=logf)
     if ret != 0:
         print('Error generating Makefile from project!')
         return -1
@@ -60,7 +62,9 @@ def compile(job):
     #   .caas.conf is uploaded via frontend as well
     #   mfgen is run for the first time on server
     try:
-        ret = subprocess.run([os.path.join(os.getcwd(), job.jobs_dir, job.id, "run_caas.sh")], cwd=work_root, timeout=compiler_timeout)
+        ret = subprocess.run([os.path.join(os.getcwd(), job.jobs_dir, job.id,
+                                           "run_caas.sh" if job.tasktype == 'compile' else "run_sim.sh")],
+                                           cwd=work_root, timeout=compiler_timeout)
         return ret.returncode
     except subprocess.CalledProcessError as cpe:
         print('CalledProcessError!')

@@ -140,7 +140,9 @@ class SubmitHandler(RequestHandler):
 
         XdcFileName = 'top.xdc'
         SrcFileName = 'top.v'
+        SimFileName = 'sim.v'
         ConfFileName = '.caas.conf'
+        TaskType = 'compile'
         try:
             inputXdcFile = bytes.decode(
                 body_arguments['inputXdcFile'][0], encoding='utf-8')
@@ -153,6 +155,13 @@ class SubmitHandler(RequestHandler):
             jobfiles.append([SrcFileName, inputSrcFile])
         except KeyError:
             inputSrcFile = None
+        try:
+            inputSimFile = bytes.decode(
+                body_arguments['inputSimFile'][0], encoding='utf-8')
+            jobfiles.append([SimFileName, inputSimFile])
+            TaskType = 'sim'
+        except KeyError:
+            inputSimFile = None
         try:
             inputConfFile = bytes.decode(
                 body_arguments['inputConfFile'][0], encoding='utf-8')
@@ -177,6 +186,9 @@ class SubmitHandler(RequestHandler):
         elif id and inputXdcFile and inputSrcFile and inputConfFile:
             success = 1 
             msg = "Request is Source + Conf. Compilation submitted... "
+        elif id and inputSimFile and inputSrcFile and inputConfFile:
+            success = 1 
+            msg = "Request is Sim + Source + Conf. Simulation submitted... "
         elif id and inputNoSource and inputConfFile:
             success = 1 
             msg = "Request is Conf without Source. Compilation submitted... "
@@ -195,7 +207,7 @@ class SubmitHandler(RequestHandler):
             logger.info("\nJob id %s failed to submit!" % id)
 
         if (success == 1):
-            jm.add_a_job(id, jobfiles)
+            jm.add_a_job(id, jobfiles, TaskType)
 
         data = {"code": success,"msg": msg}
         self.write(data)
@@ -286,6 +298,7 @@ class SubmitHandler(RequestHandler):
                     # data.append([each,4,""])
         # self.write({'data':data})
 
+# Downloading log during compilation is allowed and recommended -- this gives a streaming of log updates
 class DownloadHandler(RequestHandler):
     async def get(self, id, filetype):
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -311,8 +324,14 @@ class DownloadHandler(RequestHandler):
         elif (filetype == 'log'):
             file = os.path.join(JOBS_DIR, "%s/build/top.log" % id)
             filename = '%s-%s-%s.log' % (id, topname, submit_time)
+        elif (filetype == 'sim_log'):
+            file = os.path.join(JOBS_DIR, "%s/build/sim.log" % id)
+            filename = '%s-%s-%s.log' % (id, topname, submit_time)
+        elif (filetype == 'wave'):
+            file = os.path.join(JOBS_DIR, "%s/build/wave.vcd" % id)
+            filename = '%s-%s-%s.vcd' % (id, topname, submit_time)
         else:
-            self.write("Invalid file type requested!")
+            self.write("Invalid file type requested: %s" % filetype)
             return
         file_exist = os.path.exists(file)
         if not file_exist:

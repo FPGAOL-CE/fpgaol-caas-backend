@@ -16,8 +16,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class job:
-    def __init__(self, id, sourcecode, jobs_dir = JOBS_DIR):
+    def __init__(self, id, sourcecode, tasktype, jobs_dir = JOBS_DIR):
         self.id = id
+        self.tasktype = tasktype
         self.submit_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         self.start_time = '-'
         self.finish_time = '-'
@@ -66,12 +67,12 @@ class jobManager:
         self.old_jobs = os.listdir(JOBS_DIR)
         self.lock = threading.Lock()
 
-    def add_a_job(self, id, sourcecode):
+    def add_a_job(self, id, sourcecode, tasktype):
         if id in self.using_job_id:
             logger.warning('add_a_job: id %s in use!' % id)
             return
         self.using_job_id.add(id)
-        a_new_job = job(id, sourcecode)
+        a_new_job = job(id, sourcecode, tasktype) # files are written on job class init
         self.lock.acquire()
         # remove finished job with same id
         # low efficiency may be
