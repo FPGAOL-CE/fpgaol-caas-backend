@@ -1,5 +1,6 @@
 import os
 import tornado
+import re
 
 import logging
 import time
@@ -14,6 +15,16 @@ from jobmanager import JOBS_DIR
 import json
 
 jm = jobManager(8, 64)
+
+def is_valid_filename(filename):
+    """
+    Validate that filename contains only valid characters:
+    a-z, A-Z, 0-9, underscore, minus sign, and dot
+    """
+    if not filename:
+        return False
+    # Allow only alphanumeric characters, underscore, minus sign, and dot
+    return re.match(r'^[a-zA-Z0-9._- ]+$', filename) is not None
 
 logging.basicConfig(
     format='%(asctime)s line:%(lineno)s,  %(message)s', level=logging.INFO)
@@ -127,15 +138,31 @@ class SubmitHandler(RequestHandler):
 
         try:
             id = bytes.decode(body_arguments['inputJobId'][0], encoding='utf-8')
+            # Validate job ID contains only valid filename characters
+            if not is_valid_filename(id):
+                success = 0
+                msg = "Invalid job ID. Only alphanumeric characters, underscore, minus sign, and dot are allowed."
+                data = {"code": success, "msg": msg}
+                self.write(data)
+                return
             logger.info("\nNew submit: id %s" % id)
         except KeyError:
-            id = None 
+            id = None
 
         jobfiles = []
 
         ZipFileName = 'job.zip'
         inputZipFile = self.request.files.get('inputZipFile')
         if inputZipFile:
+            # Validate filenames in the zip file upload -- quite brutal checking, just keep for now
+            for file_info in inputZipFile:
+                if hasattr(file_info, 'filename') and file_info.filename:
+                    if not is_valid_filename(file_info.filename):
+                        success = 0
+                        msg = f"Invalid filename in zip upload: {file_info.filename}. Only alphanumeric characters, underscore, minus sign, and dot are allowed."
+                        data = {"code": success, "msg": msg}
+                        self.write(data)
+                        return
             jobfiles.append([ZipFileName, inputZipFile])
 
         XdcFileName = 'top.xdc'
