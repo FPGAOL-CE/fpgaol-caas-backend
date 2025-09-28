@@ -24,7 +24,7 @@ def is_valid_filename(filename):
     if not filename:
         return False
     # Allow only alphanumeric characters, underscore, minus sign, and dot
-    return re.match(r'^[a-zA-Z0-9._- ]+$', filename) is not None
+    return re.match(r'^[a-zA-Z0-9._\- ]+$', filename) is not None
 
 logging.basicConfig(
     format='%(asctime)s line:%(lineno)s,  %(message)s', level=logging.INFO)
